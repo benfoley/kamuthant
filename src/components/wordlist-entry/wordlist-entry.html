@@ -1,29 +1,43 @@
 <ion-grid item-content *ngIf='sortKey=="lx"'>
   <ion-row>
-    <ion-col class="hw">
-      <h1 *ngIf="entry.lxc">{{entry.lxc}}</h1>
-      <h1 *ngIf="! entry.lxc">{{entry.lx}}</h1>
+    <ion-col col-2 class="images" *ngIf="entry.assets">
+
+      <div
+        class="hw-image"
+        *ngIf="entry.assets.images && entry.assets.images[0].path"
+        [ngStyle]="{'background-image': 'url(' + entry.assets.images[0].path + ')'}"
+        ></div>
     </ion-col>
-  </ion-row>
-  <ion-row *ngIf='entry.senses'>
-    <ion-col>
-      <ul *ngIf='entry.senses.length > 0'>
-        <li *ngFor="let sense of entry.senses">
-          <span *ngIf="sense"> {{sense.def}} </span>
-        </li>
-      </ul>
-       <ul *ngIf='(! entry.senses.length) && (entry.senses.def)'>
-        <li>
-          <span *ngIf="entry.senses.def"> {{entry.senses.def}} </span>
-        </li>
-      </ul>
+    <ion-col col-10 class="data">
+        <h1 *ngIf="entry.lxc">{{entry.lxc}}</h1>
+        <h1 *ngIf="! entry.lxc">{{entry.lx}}</h1>
+        <div *ngIf='entry.senses'>
+          <ul *ngIf='entry.senses.length > 0'>
+            <li *ngFor="let sense of entry.senses">
+              <span *ngIf="sense"> {{sense.def}} </span>
+            </li>
+          </ul>
+           <ul *ngIf='(! entry.senses.length) && (entry.senses.def)'>
+            <li>
+              <span *ngIf="entry.senses.def"> {{entry.senses.def}} </span>
+            </li>
+          </ul>
+        </div>
     </ion-col>
   </ion-row>
 </ion-grid>
 
+
 <ion-grid item-content *ngIf='sortKey=="def"'>
-  <ion-row *ngIf='entry.senses'>
-    <ion-col class="hw">
+  <ion-row>
+    <ion-col col-2 class="images" *ngIf="entry.assets">
+      <div
+        class="hw-image"
+        *ngIf="entry.assets.images && entry.assets.images[0].path"
+        [ngStyle]="{'background-image': 'url(' + entry.assets.images[0].path + ')'}"
+        ></div>
+    </ion-col>
+    <ion-col col-10 class="data">
       <div *ngIf='entry.senses.length > 0'>
         <h1 *ngFor="let sense of entry.senses">
           <span *ngIf="sense"> {{sense.def}} </span>
@@ -34,10 +48,6 @@
           <span *ngIf="entry.senses.def"> {{entry.senses.def}} </span>
         </h1>
       </div>
-    </ion-col>
-  </ion-row>
-  <ion-row>
-    <ion-col>
       <ul>
         <li *ngIf="entry.lxc">{{ entry.lxc }}</li>
         <li *ngIf="! entry.lxc">{{ entry.lx }}</li>

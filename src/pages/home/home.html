@@ -8,13 +8,17 @@
 
 <ion-content padding>
 
+
   <ion-card padding>
     <header><h1>Dictionary</h1></header>
     <button ion-button outline (click)="gotoAbout()">About this dictionary</button>
     <button ion-button outline (click)="gotoSearch()">Search</button>
   </ion-card>
 
-  <ion-card padding *ngIf="loading">
+
+
+
+  <ion-card padding *ngIf="isLoading">
     <div class="loading-container small inline">
       <div class="loading spin"></div>
     </div>
@@ -26,10 +30,9 @@
     </div>
   </ion-card>
 
+
+
   <ion-card padding class="alphabet">
-    <div class="loading-container" *ngIf='downloading$ | async'>
-      <div class="loading spin"></div>
-    </div>
     <button
       ion-button
       *ngFor="let letter of lettersLoaded$ | async | values"
@@ -38,9 +41,10 @@
     </button>
   </ion-card>
 
+
+
   <ion-card padding class="meta">
     <p>{{status$ | async}}</p>
-    <p>{{syncMessage$ | async}}</p>
   </ion-card>
 
 

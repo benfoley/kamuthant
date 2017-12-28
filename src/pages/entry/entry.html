@@ -7,9 +7,17 @@
 
 <ion-content padding class="flex">
 
-  <div class="entry-container">
 
+  <div class="entry-container">
     <section class="entry" (swipe)="swipeEvent($event)">
+
+      <div *ngIf="entry.assets">
+        <div
+          class="entry-image"
+          *ngIf="entry.assets.images && entry.assets.images[0].path"
+          [ngStyle]="{'background-image': 'url(' + entry.assets.images[0].path + ')'}"
+          ></div>
+      </div>
 
       <div class="hw">
         <h1 *ngIf="entry.lxc">{{entry.lxc}}</h1>
@@ -46,6 +54,7 @@
 
   </div>
 
+  <!-- 
   <div id="page-nav" *ngIf="! search">
     <button ion-button icon-only clear color="dark" (click)="prev()" *ngIf="index>0">
       <ion-icon name="arrow-dropleft-circle"></ion-icon>
@@ -54,4 +63,5 @@
       <ion-icon name="arrow-dropright-circle"></ion-icon>
     </button>
   </div>
+   -->
 </ion-content>

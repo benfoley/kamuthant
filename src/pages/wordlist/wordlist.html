@@ -9,27 +9,24 @@
 
 <ion-content padding>
 
-
-  <div *ngIf='loading==true'>
-    loading...
-  </div>
-
-  <div *ngIf="entriesCount == 0">
-    <p class="center">No entries for {{ letter$ | async }}</p>
+  <div *ngIf="entries.length == 0">
+    <p class="center">No entries for {{ letter }}</p>
   </div>
 
   <ion-list
     class="wordlist"
-    *ngIf='(! loading) && (entriesCount > 0)'
-    [virtualScroll]='entries$ | async'
+    [virtualScroll]='entries'
     [approxItemHeight]="'50px'"
     >
+
     <ion-item
       *virtualItem='let entry'>
 
-      <wordlist-entry item-content [sortKey]='language.sortKey' [entry]='entry' (click)='goToEntry(entry)'></wordlist-entry>
+      <wordlist-entry item-content [sortKey]='language.sortKey' [entry]='entry' (click)='goToEntry(entry)'></wordlist-entry> 
 
     </ion-item>
+
   </ion-list>
+
 
 </ion-content>

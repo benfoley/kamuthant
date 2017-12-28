@@ -1,13 +1,12 @@
-import { Component, NgZone, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component } from '@angular/core';
 import { style, animate, transition, trigger } from '@angular/core';
 import { IonicPage, NavController } from 'ionic-angular';
 import { Observable } from "rxjs/Observable";
+
 import { DatabaseService } from "../../providers/database-service"
 import { EntryService } from "../../providers/entry-service"
-import { LanguageService } from "../../providers/language-service"
 import { ConnectivityService } from "../../providers/connectivity-service"
 import { SyncService } from "../../providers/sync-service"
-
 import { LanguageChooser } from "../../components/language-chooser/language-chooser.module"
 
 
@@ -29,38 +28,28 @@ import { LanguageChooser } from "../../components/language-chooser/language-choo
 })
 export class Home {
 
-  language: any
-  loading: boolean = true
+  isLoading: boolean = true
   lettersLoading$: Observable<any>
   lettersLoaded$: Observable<any>
   lettersLoadingSub: any
-  languageCode$: Observable<any>
   status$: Observable<any>
-  syncMessage$: Observable<any>
-  downloading$: Observable<any>
 
   constructor(
+    public navCtrl: NavController,
     public connectivityService: ConnectivityService,
     public databaseService: DatabaseService,
     public entryService: EntryService,
-    public languageService: LanguageService,
-    public navCtrl: NavController,
     public syncService: SyncService,
-    public cd: ChangeDetectorRef,
-    public zone: NgZone
   ) {
   }
 
   ngOnInit() {
     this.lettersLoading$ = this.syncService.lettersLoading$
     this.lettersLoadingSub = this.syncService.lettersLoading$.subscribe( (letters) => {
-      this.loading = (letters.length > 0) ? true : false
+      this.isLoading = (letters.length > 0) ? true : false
     })
     this.lettersLoaded$  = this.syncService.lettersLoaded$
-    this.languageCode$   = this.languageService.languageCode$
     this.status$ = this.connectivityService.onlineSubject
-    this.syncMessage$ = this.syncService.syncMessage$
-    this.downloading$ = this.syncService.downloading$
   }
 
   ngOnDestroy() {
@@ -76,11 +65,11 @@ export class Home {
   }
 
   gotoWordlist(letter) {
-    this.entryService.setLetter(letter)
-    this.navCtrl.push('Wordlist')
+    // this.entryService.setLetter(letter)
+    this.navCtrl.push('words', {letter:letter})
   }
 
-  status() {
-    return this.connectivityService.isOnline()
-  }
+  // status() {
+  //   return this.connectivityService.isOnline()
+  // }
 }

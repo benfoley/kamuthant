@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component } from '@angular/core';
 import { IonicPage, NavController, NavParams } from 'ionic-angular';
 import { Observable } from "rxjs/Observable";
 import { DatabaseService } from "../../providers/database-service"
@@ -6,52 +6,47 @@ import { EntryService } from "../../providers/entry-service"
 import { LanguageService } from "../../providers/language-service"
 
 
-@IonicPage()
+@IonicPage({
+  name: "words",
+  segment: "words/:letter",
+  defaultHistory: ["Home"]
+})
 @Component({
   selector: 'page-wordlist',
   templateUrl: 'wordlist.html',
 })
 export class Wordlist {
 
-  entries$: Observable<any>
-  entriesSub: any
+  isLoading: boolean = true
+  letter: string
+  entries: any = []
   language: any
-  languageSub: any
-  entriesCount: number
-  letter$: Observable<string>
-  loading: boolean = true
 
   constructor(
     public navCtrl: NavController,
+    public navParams: NavParams,
     public databaseService: DatabaseService,
     public entryService: EntryService,
     public languageService: LanguageService,
-    public cd: ChangeDetectorRef
     ) {
-    this.entries$ = this.entryService.entries$
   }
 
   ngOnInit() {
-    // Letter subscription
-    this.letter$ = this.entryService.letter$
-    // Language subscription, reload entries when language changes
-    this.languageSub = this.languageService.language$.subscribe( (language) => {
+    
+    // Get the letter from nav params
+    this.letter = this.navParams.data.letter
+
+    this.entryService.entries$.subscribe((entries) => {
+      if (Array.isArray(entries)) this.entries = entries
+    })
+
+    this.languageService.language$.subscribe((language) => {
       this.language = language
-      // Get the entries
-      this.entryService.getWordlistForLetter()
-        .then((res:any) => {
-          this.loading = false
-          this.entriesCount = res.length
-          // this.cd.markForCheck() // Marks path for change detection
-        })
-        .catch( (err) => {
-          this.entriesCount = 0
-        })
+      if (this.letter) this.entryService.getEntriesByLetter(this.letter)
     })
   }
 
   ngOnDestroy() {
-    this.languageSub.unsubscribe()
   }
 
   goToEntry(entry) {
