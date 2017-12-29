@@ -107,8 +107,6 @@ export class EntryService {
         this.entriesIndex[lang][char] = []
       }
       this.entriesIndex[lang][char].push({id:id, word:word})
-
-      console.log("this.entriesIndex", this.entriesIndex)
     }
   }
 
@@ -117,19 +115,18 @@ export class EntryService {
   async saveEntriesLocally(entries) {
     for (let id in entries) {
       let entry = entries[id]
+      // save attachments
+      if (entry.assets) await this.attachmentService.saveAttachments(entry)
       // Save the entry to pouch
       let doc = {"_id": id, "data": entry}
       await this.databaseService.insertOrUpdate(doc)
-        .then((res)=>{
-          console.log("updated doc", res)
-        })
-        .catch((err)=>{
-          console.log("insertOrUpdate err", err)
-        })
+        .then((res)=>{})
+        .catch((err)=>{})
+      // update our handy index list
       let x = await this.addEntryToIndex(id, entry)
       let index = {"_id": "index", "data": this.entriesIndex}
       this.databaseService.insertOrUpdateIndex(index)
-        .then((res)=>{console.log(res)})
+        .then((res)=>{})
         .catch((err)=>{console.log(err)})
     }
   }

@@ -167,7 +167,6 @@ online?
   // . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
   getEntriesForLetter(letters) {
-    console.log('SS getEntriesForLetter', letters)
 
     letters.map( (letter) => {
       this.lettersLoadingAdd(letter)
@@ -176,7 +175,6 @@ online?
       .then((entries:any) => {
 
         if (entries) {
-          console.log("entries", entries)
           this.entryService.saveEntriesLocally(entries)
           this.showLettersLoaded(entries)
         }

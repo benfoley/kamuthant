@@ -60,19 +60,13 @@ export class DatabaseService {
   }
 
   insertOrUpdateIndex(doc) {
-    
-    console.log("saving index", JSON.stringify( doc ))
-
-
     return new Promise((resolve, reject) => {
       this.pdbi.get(doc._id, {include_docs: true})
       .then((_doc) => {
-          console.log("index exists, update it")
           doc._rev = _doc._rev
           resolve(this.pdbi.put(doc))
       })
       .catch((err) => {
-          console.log("no index, save it")
           resolve(this.pdbi.put(doc))
       })
     })

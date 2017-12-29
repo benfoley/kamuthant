@@ -24,40 +24,31 @@ export class AttachmentService {
   }
 
 
-  async saveAttachments(entries) {
+  async saveAttachments(entry) {
 
     // build array of assets for easy iteration
-    let assets = this.flattenAssetArray(entries)
+    let assets = this.flattenAssetArray(entry)
     // do stuff
     await Promise.all(assets.map(async (asset) => {
-      const contents = await this.getURL(asset)
-      console.log("contents", contents)
+      await this.getURL(asset)
     }))
-    console.log("done downloads, save entries")
+    // console.log("done downloads, save entries")
   }
 
-  flattenAssetArray(entries) {
+  flattenAssetArray(entry) {
     let assets = []
-    for (let entry of entries) {
-      if ((typeof(entry) != "undefined") && (entry.hasOwnProperty("assets") )) {
-        if (entry.assets.images) {        
-          for (let image of entry.assets.images) {
-            assets.push(image)
-          }
-        }
-        if (entry.assets.audio) {
-          for (let audio of entry.assets.audio) {
-            assets.push(audio)
-          }
-        }
-      }        
+    if (entry.assets.images) {        
+      for (let image of entry.assets.images) {
+        assets.push(image)
+      }
+    }
+    if (entry.assets.audio) {
+      for (let audio of entry.assets.audio) {
+        assets.push(audio)
+      }
     }
     return assets
   }
-
-
-
-
 
   async getURL(asset) {
     await firebase.storage().ref(asset.type).child(asset.id).getDownloadURL()
