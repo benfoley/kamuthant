@@ -4,7 +4,7 @@ import { Platform } from 'ionic-angular'
 import { Http } from '@angular/http';
 import 'rxjs/add/operator/map';
 import { Transfer, FileUploadOptions, TransferObject } from '@ionic-native/transfer';
-import { File } from '@ionic-native/file';
+import { File } from '@ionic-native/file'
 
 import firebase from 'firebase'
 
@@ -23,67 +23,54 @@ export class AttachmentService {
     this.path = 'cdvfile://localhost/persistent/'
   }
 
-  saveAttachments(entries) {
-    console.log('saveAttachments')
-    // only save media if we are on a device
-    // if (this.platform.is('core')) return
 
-    entries.forEach( (entry) => {
-      if ((entry.assets) && (entry.assets.audio)) this.prepareFiles(entry.assets.audio)
-      if ((entry.assets) && (entry.assets.images)) this.prepareFiles(entry.assets.images)
-    })
+  async saveAttachments(entries) {
 
+    // build array of assets for easy iteration
+    let assets = this.flattenAssetArray(entries)
+    // do stuff
+    await Promise.all(assets.map(async (asset) => {
+      const contents = await this.getURL(asset)
+      console.log("contents", contents)
+    }))
+    console.log("done downloads, save entries")
   }
 
-  prepareFiles(assets) {
-    console.log('prepareFiles')
-    // console.log(assets)
-    assets.forEach((asset) => {
-      this.file.checkFile(this.path, asset.id)
-        .then((exists) => {
-          console.log('check file: exists')
-          // resolve the data directory first, then resolve the file
-          this.file.resolveDirectoryUrl(this.path)
-          .then( (dirEntry) => {
-              this.file.getFile(dirEntry, asset.id, {})
-              .then((entry) => {
-                asset.path = entry.toURL()
-                console.log('asset')
-                console.log(asset)
-              })
-          })
-        })
-        .catch((err) => {
-          console.log('check file: does not exist')
-          this.downloadFile(asset.type, asset)
-        })
-    })
+  flattenAssetArray(entries) {
+    let assets = []
+    for (let entry of entries) {
+      if ((typeof(entry) != "undefined") && (entry.hasOwnProperty("assets") )) {
+        if (entry.assets.images) {        
+          for (let image of entry.assets.images) {
+            assets.push(image)
+          }
+        }
+        if (entry.assets.audio) {
+          for (let audio of entry.assets.audio) {
+            assets.push(audio)
+          }
+        }
+      }        
+    }
+    return assets
   }
 
-  downloadFile(type, asset) {
-    console.log('downloadFile')
-    firebase.storage().ref(type).child(asset.id).getDownloadURL()
-    .then((url) => {
-      console.log('got download URL', url)
-      if (this.platform.is('core')) {
-      // browser
-        asset.path = url
-        return
-      } else {
-        // device
-        let fileTransfer: TransferObject = this.transfer.create()
-        fileTransfer.download(url, this.path + asset.id)
-          .then((entry) => {
-            console.log('download complete: ' + entry.toURL())
-            asset.path = entry.toURL()
-          }, (error) => {
-            console.log("error doing file transfer", error)
-          })
-      }
-    })
-    .catch((err) => {
-      console.log("error getting from firebase", err)
-    })
+
+
+
+
+  async getURL(asset) {
+    await firebase.storage().ref(asset.type).child(asset.id).getDownloadURL()
+    .then((url) => asset.path = url)
+    // await this.timeout(3000)
+    return asset.path
   }
+
+
+
+  timeout(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
 
 }

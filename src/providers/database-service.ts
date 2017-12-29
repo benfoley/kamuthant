@@ -79,18 +79,25 @@ export class DatabaseService {
   }
 
 
-  getFromPouch(key) {
-    console.log("key", key)
-    return new Promise((resolve, reject) => {
-      this.pdb.get(key)
-        .then((doc) => {
-          console.log("getFromPouch", doc)
-          resolve(doc)
-        })
-        .catch((err) => {
-          reject(err)
-        })
-    })
+  async getFromPouch(key) {
+    
+    try {
+      let doc = await this.pdb.get(key)
+      return doc
+    } catch (err) {
+      console.log(err);
+    }
+
+    // return new Promise((resolve, reject) => {
+    //   this.pdb.get(key)
+    //     .then((doc) => {
+    //       console.log("getFromPouch", doc)
+    //       resolve(doc)
+    //     })
+    //     .catch((err) => {
+    //       reject(err)
+    //     })
+    // })
   }
 
 

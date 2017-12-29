@@ -10,6 +10,7 @@
     "ionic:serve": "ionic-app-scripts serve"
   },
   "dependencies": {
+    "@angular/animations": "^4.4.3",
     "@angular/common": "^4.4.3",
     "@angular/compiler": "^4.4.3",
     "@angular/compiler-cli": "^4.4.3",

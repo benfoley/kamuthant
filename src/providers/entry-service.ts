@@ -136,26 +136,16 @@ export class EntryService {
 
 
   async getEntriesByLetter(letter) {
-
     // get the index from the db
-    // 
     let index = await this.databaseService.getIndex()
-    console.log("index")
     let items = index.rows[0].doc.data[this.languageCode][letter]
-
     let arr = []
     if (items) {
-      for(let item of items) {
-        console.log(item)
-        // build an array with the real entries
-        this.databaseService.getFromPouch(item.id).then((res:any)=>{
-          if (res.data) arr.push(res.data)
-        })     
-      }
+      // get the real entry for this id
+      await Promise.all( items.map( async (item) => {
+        await this.databaseService.getFromPouch(item.id).then((res:any)=>{if (res.data) arr.push(res.data)})
+      }))
     }
-    console.log(arr)
     this._entries$.next( arr )
   }
-
-
 }

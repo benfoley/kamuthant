@@ -9,11 +9,27 @@
 
 <ion-content padding>
 
+
+
+
   <div *ngIf="entries.length == 0">
     <p class="center">No entries for {{ letter }}</p>
   </div>
+<!-- 
+
+  <ion-list>
+    <ion-item *ngFor="let entry of entries">
+      <wordlist-entry item-content [sortKey]='language.sortKey' [entry]='entry' (click)='goToEntry(entry)'></wordlist-entry> 
+    </ion-item>
+  </ion-list>
+-->
+
+  <!-- VIRTUAL LIST IS ONLY LOADING THE FIRST ITEM. GRRR -->
+  
+  <!-- {{ entries | json }} -->
 
   <ion-list
+    [@visibilityChanged]="visibility"
     class="wordlist"
     [virtualScroll]='entries'
     [approxItemHeight]="'50px'"
