@@ -13,6 +13,7 @@ export class DatabaseService {
 
   entriesKey: string = "entries"
   pdb: any
+  pdbi: any
   appOnline: boolean
   _dbVersion$: BehaviorSubject<any> = new BehaviorSubject(null)
 
@@ -21,30 +22,14 @@ export class DatabaseService {
     ) {
 
     // create or open the db
-    this.pdb = new PouchDB('Dictionary');
+    this.pdb  = new PouchDB('Dictionary');
+    this.pdbi = new PouchDB('Index');
 
     connectivityService.status.subscribe((status) => {
       this.appOnline = (status !== 'offline')
     })
 
     this.getDbVersion()
-
-  }
-
-  populatePouch( key ) {
-    return new Promise((resolve, reject) => {
-      if ( ! this.appOnline) reject("no connection")
-      this.getFromFirebase(key)
-        .then((res) => {
-          let doc = {"_id": key}
-          doc[key] = res
-          this.insertOrUpdate(doc)
-          resolve(res)
-        })
-        .catch((err) => {
-          reject(err)
-        })
-    })
 
   }
 
@@ -61,16 +46,74 @@ export class DatabaseService {
 
   // POUCH - - - - - - - - - - - - - - - -
 
+
+  async getIndex(){
+    try {
+      var result = await this.pdbi.allDocs({
+        include_docs: true,
+        attachments: true
+      })
+      return result
+    } catch (err) {
+      console.log(err)
+    }
+  }
+
+  insertOrUpdateIndex(doc) {
+    
+    console.log("saving index", JSON.stringify( doc ))
+
+
+    return new Promise((resolve, reject) => {
+      this.pdbi.get(doc._id, {include_docs: true})
+      .then((_doc) => {
+          console.log("index exists, update it")
+          doc._rev = _doc._rev
+          resolve(this.pdbi.put(doc))
+      })
+      .catch((err) => {
+          console.log("no index, save it")
+          resolve(this.pdbi.put(doc))
+      })
+    })
+  }
+
+
   getFromPouch(key) {
+    console.log("key", key)
     return new Promise((resolve, reject) => {
       this.pdb.get(key)
         .then((doc) => {
-          resolve( doc[key] )
+          console.log("getFromPouch", doc)
+          resolve(doc)
         })
         .catch((err) => {
           reject(err)
         })
     })
+  }
+
+
+  async getAllEntries(){
+    try {
+      var result = await this.pdb.allDocs({
+        include_docs: true,
+        attachments: true
+      })
+      return result
+    } catch (err) {
+      console.log(err)
+    }
+  }
+
+  async getEntry(key) {
+    try {
+      var result = await this.pdb.get(key)
+      return result
+    } catch (err) {
+      console.log(err);
+    }
+
   }
 
   insertOrUpdate(doc) {
@@ -79,7 +122,8 @@ export class DatabaseService {
       .then((_doc) => {
           doc._rev = _doc._rev
           resolve(this.pdb.put(doc))
-      }).catch((err) => {
+      })
+      .catch((err) => {
           resolve(this.pdb.put(doc))
       })
     })

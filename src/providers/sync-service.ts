@@ -174,11 +174,13 @@ online?
 
       this.databaseService.queryFirebase('entries', 'initial', letter)
       .then((entries:any) => {
-        
-        if ((entries) && (entries.length > 0)) {
-          this.entryService.mergeEntries(entries)
+
+        if (entries) {
+          console.log("entries", entries)
+          this.entryService.saveEntriesLocally(entries)
           this.showLettersLoaded(entries)
         }
+
         this.lettersLoadingDelete(letter)
       })
     })

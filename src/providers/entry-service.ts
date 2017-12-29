@@ -12,7 +12,7 @@ export class EntryService {
   // Use entriesAll as a memory cache of all the entries,
   // Then the observable (entries$) can be the entries for the current state
   entriesAll: any = {}
-  entriesIndex: any
+  entriesIndex: any = []
   // Subscribe to this for current filtered entry list
   _entries$: BehaviorSubject<any> = new BehaviorSubject({})
 
@@ -24,16 +24,18 @@ export class EntryService {
     public databaseService: DatabaseService,
     public languageService: LanguageService
   ) {
-
     this.languageService.languageCode$.subscribe((language) => this.languageCode = language)
-
+    if (this.entriesIndex.length == 0) this.initIndex()
   }
 
   get entries$() {
     return this._entries$.asObservable()
   }
 
-
+  // This munges together all the def/ge words in entry senses
+  // useful for ordering and searching entries
+  // outputs something like; tide.go.down.tide.be.low
+  // 
   flattenSenses(entry) {
     let word, def, ge
     if (entry.senses) {
@@ -63,130 +65,95 @@ export class EntryService {
   }
 
 
-  // Update our collection with retrieved firebase objects
-
-  mergeEntries(entries) {
-    console.log('mergeEntries', entries)
-    console.log("entries length: ", entries.length)
-
-    if (! entries.length) return 
-
-    // Any attachments to save?
-    this.attachmentService.saveAttachments(entries)
-
-    // Combine with our existing entries (need to de-duplicate?)
-    Object.assign(this.entriesAll, entries)
-
-    console.log("build index", this.entriesIndex)
-    // this.buildIndex(entries)
-
-    // Save to pouch
-    let doc = {"_id": this.databaseService.entriesKey}
-    doc[this.databaseService.entriesKey] = this.entriesAll
-    this.databaseService.insertOrUpdate(doc)
-      .then((res)=>{
-        console.log("mergeEntries update db")
-        console.log(res)
-      })
-      .catch((err)=>{
-        console.log("mergeEntries update err")
-        console.log(err)
-      })
-  }
-
-  // Replace collection with pouch data
-
-  replaceEntries(entries) {
-    console.log("replaceEntries: entries")
-    console.log(entries)
-    this.entriesAll = entries
-  }
-
-  buildIndex(entries){
-    // Create the index if it isn't already made
-    this.entriesIndex = {}
-    for (let language of this.languageService.languages) {
-      this.entriesIndex[language.code] = []
-    }
-    // Add the entry to the index
-    for (let lang in this.entriesIndex) {
-      for (let key in entries) {
-        let entry = entries[key]
-        this.addEntryToIndex(lang, key, entry)
-      }
-      // Sort the arrays by the word value
-      for(let key in this.entriesIndex[lang]) {
-        let arr = this.entriesIndex[lang][key]
-        arr.sort(this.dynamicSort("word"))
-      }
-    }
-  }
-
-  // Change this to use ID instead of word value
+  // Just returns the first character of a word
   // 
-  addEntryToIndex(lang, key, entry) {
-    let char, word
-    if (lang=='ENG') {
-      let flattened = this.flattenSenses(entry)
-      char = this.getInitial(flattened)
-      word = this.getWord(flattened)
-    } else {
-      char = entry.initial
-      word = entry.lx
-    }
-
-    if (typeof(this.entriesIndex[lang][char])=="undefined") {
-      this.entriesIndex[lang][char] = []
-    }
-    this.entriesIndex[lang][char].push({key:key, word:word})
-  }
-
-  dynamicSort(property) {
-    let sortOrder = 1
-    if(property[0] === "-") {
-      sortOrder = -1
-      property = property.substr(1)
-    }
-    return function (a,b) {
-      let result = (a[property] < b[property]) ? -1 : (a[property] > b[property]) ? 1 : 0
-      return result * sortOrder
-    }
-  }
-
   getInitial(word) {
     return(word.charAt(0))
   }
 
-  getWord(word) {
+  getFirstWord(word) {
     word = word.replace(/\./," ").toLowerCase()
     return(word.split(" ")[0])
   }
 
-  getEntry(key) {
-    return(this.entriesAll[key])
-  } 
-
-  async getEntries() {
-    await this.databaseService.getFromPouch("entries")
-      .then((entries) => {
-        this.entriesAll = entries
-        this.buildIndex(entries)
-      })
+  // DELETE ME
+  mergeEntries(entries) {
   }
 
-  async getEntriesByLetter(letter) {
-    let arr
-    await this.getEntries()
-    if (this.entriesIndex[this.languageCode][letter]) {
-      arr = this.entriesIndex[this.languageCode][letter].map( (e) => {
-        let entry = this.entriesAll[e.key]
-        entry.key = e.key
-        return entry
-      })
-    } else {
-      // No entries for this lang:letter combo
-      arr = []
+
+  // We use an index to assist lookup of words by letter, and for nav between entries
+  // 
+  initIndex(){
+    this.entriesIndex = {}
+    for (let language of this.languageService.languages) {
+      this.entriesIndex[language.code] = {}
     }
+  }
+  
+  async addEntryToIndex(id, entry) {
+    let lang, char, word
+    for (let lang in this.entriesIndex) {
+
+      if (lang=='ENG') {
+        let flattened = this.flattenSenses(entry)
+        char = this.getInitial(flattened)
+        word = this.getFirstWord(flattened)
+      } else {
+        char = entry.initial
+        word = entry.lx
+      }
+
+      if (typeof(this.entriesIndex[lang][char])=="undefined") {
+        this.entriesIndex[lang][char] = []
+      }
+      this.entriesIndex[lang][char].push({id:id, word:word})
+
+      console.log("this.entriesIndex", this.entriesIndex)
+    }
+  }
+
+  // Save each entry to PouchDB
+  // 
+  async saveEntriesLocally(entries) {
+    for (let id in entries) {
+      let entry = entries[id]
+      // Save the entry to pouch
+      let doc = {"_id": id, "data": entry}
+      await this.databaseService.insertOrUpdate(doc)
+        .then((res)=>{
+          console.log("updated doc", res)
+        })
+        .catch((err)=>{
+          console.log("insertOrUpdate err", err)
+        })
+      let x = await this.addEntryToIndex(id, entry)
+      let index = {"_id": "index", "data": this.entriesIndex}
+      this.databaseService.insertOrUpdateIndex(index)
+        .then((res)=>{console.log(res)})
+        .catch((err)=>{console.log(err)})
+    }
+  }
+
+
+  async getEntriesByLetter(letter) {
+
+    // get the index from the db
+    // 
+    let index = await this.databaseService.getIndex()
+    console.log("index")
+    let items = index.rows[0].doc.data[this.languageCode][letter]
+
+    let arr = []
+    if (items) {
+      for(let item of items) {
+        console.log(item)
+        // build an array with the real entries
+        this.databaseService.getFromPouch(item.id).then((res:any)=>{
+          if (res.data) arr.push(res.data)
+        })     
+      }
+    }
+    console.log(arr)
     this._entries$.next( arr )
   }
 
