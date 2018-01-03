@@ -169,13 +169,14 @@ online?
   getEntriesForLetter(letters) {
 
     letters.map( (letter) => {
+      console.log("* *", letter)
       this.lettersLoadingAdd(letter)
 
       this.databaseService.queryFirebase('entries', 'initial', letter)
-      .then((entries:any) => {
+      .then(async (entries:any) => {
 
         if (entries) {
-          this.entryService.saveEntriesLocally(entries)
+          await this.entryService.saveEntriesLocally(entries)
           this.showLettersLoaded(entries)
         }
 

@@ -18,6 +18,17 @@
 
 
 
+  <ion-card padding class="alphabet">
+    <button
+      ion-button
+      *ngFor="let letter of lettersLoaded$ | async | values"
+      (click)="gotoWordlist(letter)">
+      {{letter}}
+    </button>
+  </ion-card>
+
+
+
   <ion-card padding *ngIf="isLoading">
     <div class="loading-container small inline">
       <div class="loading spin"></div>
@@ -28,17 +39,6 @@
         {{letter}}
       </span>
     </div>
-  </ion-card>
-
-
-
-  <ion-card padding class="alphabet">
-    <button
-      ion-button
-      *ngFor="let letter of lettersLoaded$ | async | values"
-      (click)="gotoWordlist(letter)">
-      {{letter}}
-    </button>
   </ion-card>
 
 
