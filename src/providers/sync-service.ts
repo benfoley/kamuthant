@@ -42,7 +42,7 @@ export class SyncService {
   1b download data if they differ
   1c use local if they match
 
-2 offline ?
+2 offline sole?
 
   2a get letters from pouch
   2b get entries from pouch
@@ -169,21 +169,58 @@ online?
   getEntriesForLetter(letters) {
 
     letters.map( (letter) => {
-      console.log("* *", letter)
       this.lettersLoadingAdd(letter)
 
       this.databaseService.queryFirebase('entries', 'initial', letter)
       .then(async (entries:any) => {
 
         if (entries) {
-          await this.entryService.saveEntriesLocally(entries)
-          this.showLettersLoaded(entries)
+          // convert firebase object to array so we can iterate 
+          let i=0, entriesArr=[]
+          for (var ob in entries) {
+            let tmpEntry = entries[ob]
+            // keep the id
+            tmpEntry["id"] = ob
+            entriesArr[i++] = tmpEntry
+          }
+          let promises = entriesArr.map( async (entry) => {
+            this.entryService.saveEntry(entry)
+            this.entryService.addEntryToIndex(entry)
+          })
+          await Promise.all(promises)
+          .then(()=>{
+            this.entryService.saveIndex()
+            this.updateLetterUI(entriesArr)
+          })
+          .catch((err)=>console.log(err))
         }
-
+        // update the loading UI - what is left to download?
         this.lettersLoadingDelete(letter)
       })
     })
   }
+
+  async updateLetterUI(entries) {
+    for (let lang in this.lettersLoaded){
+      for (let i in entries) {
+        let letter = this.getLetter(lang, entries[i])
+        if (this.lettersLoaded[lang].indexOf(letter) == -1) {
+          this.lettersLoaded[lang].push(letter)
+        }
+      }
+    }
+  }
+
+  getLetter(lang, entry) {
+    if (lang=='ENG') {
+      let word = this.entryService.flattenSenses(entry)
+      return this.entryService.getInitial(word) 
+    } else {
+      return entry.initial.toLowerCase()
+    }
+
+  }
+
 
   lettersLoadingAdd(letter) {
     this.lettersLoading.push(letter)
@@ -199,22 +236,22 @@ online?
     }
   }
 
-  showLettersLoaded(entries) {
-    // 2c work out the letters to show
-    for (let lang in this.lettersLoaded){
-      for (let key in entries) {
+  // showLettersLoaded(entries) {
+  //   // 2c work out the letters to show
+  //   for (let lang in this.lettersLoaded){
+  //     for (let key in entries) {
         
-        // for <LANG> we can use entry.initial
-        // but for <ENG> we need to get data from the ge/def - so use the entry service's flatten helper
-        let entry = entries[key]
-        let flattenedSenses = this.entryService.flattenSenses(entry)
-        let char = (lang=='ENG') ? this.entryService.getInitial(flattenedSenses) : entry.initial.toLowerCase()
+  //       // for <LANG> we can use entry.initial
+  //       // but for <ENG> we need to get data from the ge/def - so use the entry service's flatten helper
+  //       let entry = entries[key]
+  //       let flattenedSenses = this.entryService.flattenSenses(entry)
+  //       let char = (lang=='ENG') ? this.entryService.getInitial(flattenedSenses) : entry.initial.toLowerCase()
 
-        if (this.lettersLoaded[lang].indexOf(char) == -1 ) this.lettersLoaded[lang].push(char)
+  //       if (this.lettersLoaded[lang].indexOf(char) == -1 ) this.lettersLoaded[lang].push(char)
 
-        this.lettersLoaded[lang].sort()
-      }
-    }
-  }
+  //       this.lettersLoaded[lang].sort()
+  //     }
+  //   }
+  // }
 
 }

@@ -49,27 +49,24 @@ export class DatabaseService {
 
   async getIndex(){
     try {
-      var result = await this.pdbi.allDocs({
+      return await this.pdbi.allDocs({
         include_docs: true,
         attachments: true
       })
-      return result
     } catch (err) {
       console.log(err)
     }
   }
 
-  insertOrUpdateIndex(doc) {
-    return new Promise((resolve, reject) => {
-      this.pdbi.get(doc._id, {include_docs: true})
-      .then((_doc) => {
-          doc._rev = _doc._rev
-          resolve(this.pdbi.put(doc))
-      })
-      .catch((err) => {
-          resolve(this.pdbi.put(doc))
-      })
-    })
+  async insertOrUpdateIndex(doc) {
+    try {
+      // does this record exist? if so, use the rev id to update
+      let _doc = await this.pdbi.get(doc._id, {include_docs: true})
+      doc._rev = _doc._rev
+      return await this.pdbi.put(doc)
+    } catch(err) {
+      return await this.pdbi.put(doc)
+    }
   }
 
 
@@ -80,27 +77,14 @@ export class DatabaseService {
     } catch (err) {
       console.log(err);
     }
-
-    // return new Promise((resolve, reject) => {
-    //   this.pdb.get(key)
-    //     .then((doc) => {
-    //       console.log("getFromPouch", doc)
-    //       resolve(doc)
-    //     })
-    //     .catch((err) => {
-    //       reject(err)
-    //     })
-    // })
   }
-
 
   async getAllEntries(){
     try {
-      var result = await this.pdb.allDocs({
+      return await this.pdb.allDocs({
         include_docs: true,
         attachments: true
       })
-      return result
     } catch (err) {
       console.log(err)
     }
@@ -108,25 +92,20 @@ export class DatabaseService {
 
   async getEntry(key) {
     try {
-      var result = await this.pdb.get(key)
-      return result
+      return await this.pdb.get(key)
     } catch (err) {
       console.log(err);
     }
-
   }
 
-  insertOrUpdate(doc) {
-    return new Promise((resolve, reject) => {
-      this.pdb.get(doc._id, {include_docs: true})
-      .then((_doc) => {
-          doc._rev = _doc._rev
-          resolve(this.pdb.put(doc))
-      })
-      .catch((err) => {
-          resolve(this.pdb.put(doc))
-      })
-    })
+  async insertOrUpdate(doc) {
+    try {
+      let _doc = await this.pdb.get(doc._id, {include_docs: true})
+      doc._rev = _doc._rev
+      return await this.pdb.put(doc)
+    } catch(err) {
+      return await this.pdb.put(doc)
+    }
   }
 
   // FIREBASE - - - - - - - - - - - - - - - -
