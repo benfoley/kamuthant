@@ -32,6 +32,10 @@ export class EntryService {
     return this._entries$.asObservable()
   }
 
+  search() {
+    // nothing yet
+  }
+
   // This munges together all the def/ge words in entry senses
   // useful for ordering and searching entries
   // outputs something like; tide.go.down.tide.be.low

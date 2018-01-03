@@ -31,10 +31,12 @@ export class Entry {
     this.entry = this.navParams.data.entry
     this.item = this.navParams.data.item
     this.search = this.navParams.data.search
-    if (! this.search) {
-      this.entryService.entriesIndex$.subscribe( (data) => this.entriesIndex = data )
-      this.getIndex()
-    }
+    
+    // if (! this.search) {
+    //   this.entryService.entriesIndex$.subscribe( (data) => this.entriesIndex = data )
+    //   this.getIndex()
+    // }
+    
   }
 
   ionViewDidEnter() {
@@ -57,21 +59,21 @@ export class Entry {
   // page nav buttons
 
   prev() {
-    --this.index
-    this.goToEntry("back")
+    // --this.index
+    // this.goToEntry("back")
   }
   next() {
-    ++this.index
-    this.goToEntry("forward")
+    // ++this.index
+    // this.goToEntry("forward")
   }
 
   goToEntry(direction) {
     // get the next item in the index
-    let item = this.entriesIndex[this.index]
+    // let item = this.entriesIndex[this.index]
     // get the full entry now
-    let entry = this.entryService.getEntry(item.key)
-    let options = {item:item, entry:entry}
-    this.navCtrl.push('Entry', options, {animation:"ios-transition", direction:direction})
+    // let entry = this.entryService.getEntry(item.key)
+    // let options = {item:item, entry:entry}
+    // this.navCtrl.push('Entry', options, {animation:"ios-transition", direction:direction})
   }
 
 
