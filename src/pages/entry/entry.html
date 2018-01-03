@@ -7,8 +7,7 @@
 
 <ion-content padding class="flex">
 
-
-  <div class="entry-container">
+  <div class="entry-container" *ngIf="entry">
     <section class="entry" (swipe)="swipeEvent($event)">
 
       <div *ngIf="entry.assets">
@@ -51,8 +50,8 @@
         </div>
       </div>
     </section>
-
   </div>
+
 
   <!-- 
   <div id="page-nav" *ngIf="! search">

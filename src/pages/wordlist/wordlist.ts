@@ -77,7 +77,6 @@ export class Wordlist {
   }
 
   goToEntry(entry) {
-    let options = {entry:entry}
-    this.navCtrl.push('Entry', options)
+    this.navCtrl.push('entry', {id: entry.id})
   }
 }

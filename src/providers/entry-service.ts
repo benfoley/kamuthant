@@ -117,8 +117,11 @@ export class EntryService {
   // Save each entry to PouchDB
   // 
   async saveEntriesLocally(entries) {
+    console.log("saving entries")
     for (let id in entries) {
       let entry = entries[id]
+      // persist the id
+      entry["id"] = id     
       // save attachments
       if (entry.assets) await this.attachmentService.saveAttachments(entry)
       // Save the entry to pouch
@@ -129,24 +132,49 @@ export class EntryService {
       // update our handy index list
       let x = await this.addEntryToIndex(id, entry)
       let index = {"_id": "index", "data": this.entriesIndex}
-      this.databaseService.insertOrUpdateIndex(index)
+      await this.databaseService.insertOrUpdateIndex(index)
         .then((res)=>{})
         .catch((err)=>{console.log(err)})
     }
   }
 
+  getEntry(id) {
+    try {
+      this.databaseService.getFromPouch(id).then((res)=>{
+        console.log(res)
+        return res
+      })
+    } catch(err){
+      console.log("getEntry error", err)
+    }
+  }
 
   async getEntriesByLetter(letter) {
     // get the index from the db
     let index = await this.databaseService.getIndex()
+    console.log("got index - -")
+    console.log(JSON.stringify(index))
+
     let items = index.rows[0].doc.data[this.languageCode][letter]
+    
+
+    console.log("got items - - -")
+    console.log(JSON.stringify(items))
+
     let arr = []
+    
     if (items) {
       // get the real entry for this id
       await Promise.all( items.map( async (item) => {
-        await this.databaseService.getFromPouch(item.id).then((res:any)=>{if (res.data) arr.push(res.data)})
+        await this.databaseService.getFromPouch(item.id).then((res:any)=>{
+          console.log("getEntriesByLetter", res)
+          if (res) {
+            arr.push(res)
+          }
+        })
       }))
     }
+    console.log("entries for letter", letter, arr)
     this._entries$.next( arr )
   }
 }

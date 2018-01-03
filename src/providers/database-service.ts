@@ -74,10 +74,9 @@ export class DatabaseService {
 
 
   async getFromPouch(key) {
-    
     try {
-      let doc = await this.pdb.get(key)
-      return doc
+      let doc = await this.pdb.get(key);
+      return doc.data
     } catch (err) {
       console.log(err);
     }
