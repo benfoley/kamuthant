@@ -34,15 +34,15 @@ export class Search {
   }
 
   search (term) {
-    this.entryService.search(term)
-      .then((res:any) => {
-        this.searchEntries = res
-        this.entriesCount = res.length
-        this.cd.markForCheck() // Marks path for change detection
-      })
-      .catch( (err) => {
-        this.entriesCount = 0
-      })
+    // this.entryService.search(term)
+    //   .then((res:any) => {
+    //     this.searchEntries = res
+    //     this.entriesCount = res.length
+    //     this.cd.markForCheck() // Marks path for change detection
+    //   })
+    //   .catch( (err) => {
+    //     this.entriesCount = 0
+    //   })
   }
 
   searchClear () {

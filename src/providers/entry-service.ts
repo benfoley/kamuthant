@@ -32,7 +32,7 @@ export class EntryService {
     return this._entries$.asObservable()
   }
 
-  search() {
+  search(term) {
     // nothing yet
   }
 
