@@ -5,6 +5,7 @@ import { Http } from '@angular/http';
 import 'rxjs/add/operator/map';
 import { Transfer, FileUploadOptions, TransferObject } from '@ionic-native/transfer';
 import { File } from '@ionic-native/file'
+import { EntryService } from "./entry-service"
 
 import firebase from 'firebase'
 
@@ -18,14 +19,15 @@ export class AttachmentService {
     private sanitizer: DomSanitizer,
     public platform: Platform,
     private transfer: Transfer,
-    private file: File
+    private file: File,
+    public entryService: EntryService
     ) {
     this.path = 'cdvfile://localhost/persistent/'
   }
 
 
   async saveAttachments(entry) {
-
+    console.log("get attachment")
     // build array of assets for easy iteration
     let assets = this.flattenAssetArray(entry)
     // do stuff
@@ -33,6 +35,7 @@ export class AttachmentService {
       await this.getURL(asset)
     }))
     // console.log("done downloads, save entries")
+    this.entryService.saveEntry(entry)
   }
 
   flattenAssetArray(entry) {
@@ -51,9 +54,11 @@ export class AttachmentService {
   }
 
   async getURL(asset) {
+    console.log("get url")
     await firebase.storage().ref(asset.type).child(asset.id).getDownloadURL()
     .then((url) => asset.path = url)
     // await this.timeout(3000)
+    console.log(asset.path)
     return asset.path
   }
 

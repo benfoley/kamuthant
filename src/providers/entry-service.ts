@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from "rxjs/BehaviorSubject"
-import { AttachmentService } from './attachment-service'
 import { DatabaseService } from './database-service'
 import { LanguageService } from './language-service'
 
@@ -20,7 +19,6 @@ export class EntryService {
   languageCode: any
 
   constructor(
-    public attachmentService: AttachmentService,
     public databaseService: DatabaseService,
     public languageService: LanguageService
   ) {

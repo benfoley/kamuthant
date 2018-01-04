@@ -1,4 +1,5 @@
-import { Injectable, NgZone  } from "@angular/core"
+import { Injectable  } from "@angular/core"
+import { AttachmentService } from "./attachment-service"
 import { ConnectivityService } from "./connectivity-service"
 import { DatabaseService } from "./database-service"
 import { EntryService } from "./entry-service"
@@ -18,11 +19,11 @@ export class SyncService {
 
 
   constructor(
+    public attachmentService: AttachmentService,
     public connectivityService: ConnectivityService,
     public databaseService: DatabaseService,
     public entryService: EntryService,
-    public languageService: LanguageService,
-    public zone: NgZone
+    public languageService: LanguageService
   ) {
     this.init()
   }
@@ -186,6 +187,8 @@ online?
           let promises = entriesArr.map( async (entry) => {
             this.entryService.saveEntry(entry)
             this.entryService.addEntryToIndex(entry)
+            if (entry.assets) await this.attachmentService.saveAttachments(entry)
+
           })
           await Promise.all(promises)
           .then(()=>{
@@ -208,6 +211,7 @@ online?
           this.lettersLoaded[lang].push(letter)
         }
       }
+      this.lettersLoaded[lang].sort()
     }
   }
 
