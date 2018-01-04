@@ -1,5 +1,5 @@
 <ion-grid item-content *ngIf='sortKey=="lx"'>
-  
+ 
   <ion-row>
     <ion-col col-2 class="images" *ngIf="entry.assets">
       <div
@@ -9,16 +9,12 @@
         ></div>
     </ion-col>
     <ion-col col-10 class="data">
-        <h1 *ngIf="entry.lxc">{{entry.lxc}}</h1>
-        <h1 *ngIf="! entry.lxc">{{entry.lx}}</h1>
+        <h1 *ngIf="entry.lxc" (click)='goToEntry(entry)'>{{entry.lxc}}</h1>
+        <h1 *ngIf="! entry.lxc" >{{entry.lx}}</h1>
 
-        <div class="entry-audio" *ngIf="entry.assets">
-
+        <div class="entry-audio">
           <div #waveform id="waveform"></div>
-
-          <audio controls *ngIf="entry.assets.audio && entry.assets.audio[0].path">
-            <source src="{{entry.assets.audio[0].path}}">
-          </audio>
+          <button (click)="play()">play</button>
         </div>
 
         <div *ngIf='entry.senses'>
@@ -33,6 +29,7 @@
             </li>
           </ul>
         </div>
+
     </ion-col>
   </ion-row>
 </ion-grid>

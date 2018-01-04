@@ -3,6 +3,8 @@ import { NavController } from 'ionic-angular';
 import { EntryService } from "../../providers/entry-service"
 
 import WaveSurfer from 'wavesurfer.js'
+import toBuffer from 'blob-to-buffer'
+
 
 @Component({
   selector: 'wordlist-entry',
@@ -17,34 +19,54 @@ export class WordlistEntry implements AfterViewInit {
 
   image: any
   wavesurfer: any
+  attachments: any = []
+  audios: any = []
 
   constructor(
     public navCtrl: NavController,
     public entryService: EntryService,
     ) {
     console.log("WordlistEntry")
+
+
   }
 
-  ngOnInit() {
+  async ngOnInit() {
+    console.log(this.entry)
+
+
   }
 
-  ngAfterViewInit() {
-    console.log("ngAfterViewInit")
-    console.log(WaveSurfer)
+  async ngAfterViewInit() {
 
-      let audiofile = 'https://ia902606.us.archive.org/35/items/shortpoetry_047_librivox/song_cjrg_teasdale_64kb.mp3';
+    this.attachments = await this.entryService.getAttachments(this.entry)
+    for (let i in this.attachments) {
+      if (this.attachments[i].content_type=="audio/wav") this.audios.push(this.attachments[i])
+    }
+
+    if (this.audios.length > 0){
+      let blob = this.audios[0].data
 
       this.wavesurfer = WaveSurfer.create({
         container: '#waveform',
         height:100
       })
-      
-      this.wavesurfer.load(audiofile)
-      
-      this.wavesurfer.on('ready', () => {
-          console.log("wavesurfer is ready")
-          this.wavesurfer.play()
-      })
+      // WaveSurfer with iOS Safari doesn't like loading blob, so use a buffer instead
+      let fileReader = new FileReader();
+      fileReader.onload = (event:any) => {
+          this.wavesurfer.loadArrayBuffer(event.target.result)
+      };
+      fileReader.readAsArrayBuffer(blob);
+
+    }
   }
 
+  play() {
+    console.log("playing")
+    this.wavesurfer.play()
+  }
+
+  goToEntry(entry) {
+    this.navCtrl.push('entry', {id: entry.id})
+  }
 }

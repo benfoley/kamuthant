@@ -76,7 +76,4 @@ export class Wordlist {
     this.langSub.unsubscribe()
   }
 
-  goToEntry(entry) {
-    this.navCtrl.push('entry', {id: entry.id})
-  }
 }

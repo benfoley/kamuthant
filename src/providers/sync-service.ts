@@ -185,7 +185,8 @@ online?
             entriesArr[i++] = tmpEntry
           }
           let promises = entriesArr.map( async (entry) => {
-            this.entryService.saveEntry(entry)
+            let doc = {"_id":entry.id, "data":entry}
+            this.entryService.saveEntry(doc)
             this.entryService.addEntryToIndex(entry)
             if (entry.assets) await this.attachmentService.saveAttachments(entry)
 

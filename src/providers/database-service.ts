@@ -22,7 +22,7 @@ export class DatabaseService {
     ) {
 
     // create or open the db
-    this.pdb  = new PouchDB('Dictionary', {auto_compaction: true})
+    this.pdb  = new PouchDB('Dictionary', {auto_compaction: false})
     this.pdbi = new PouchDB('Index', {auto_compaction: true})
 
     connectivityService.status.subscribe((status) => {
@@ -72,7 +72,7 @@ export class DatabaseService {
 
   async getFromPouch(key) {
     try {
-      let doc = await this.pdb.get(key);
+      let doc = await this.pdb.get(key, {include_docs: true})
       return doc.data
     } catch (err) {
       console.log(err);
@@ -90,9 +90,9 @@ export class DatabaseService {
     }
   }
 
-  async getEntry(key) {
+  async getEntry(docId) {
     try {
-      return await this.pdb.get(key)
+      return await this.pdb.get(docId)
     } catch (err) {
       console.log(err);
     }
@@ -102,6 +102,7 @@ export class DatabaseService {
     try {
       let _doc = await this.pdb.get(doc._id, {include_docs: true})
       doc._rev = _doc._rev
+      console.log("insertOrUpdate")
       return await this.pdb.put(doc)
     } catch(err) {
       return await this.pdb.put(doc)
@@ -109,16 +110,22 @@ export class DatabaseService {
   }
 
 
-  // save an attachment - overwrite existing by using the same attachmentId
-  async addAttachment(docId, attachment) {
+  async getAttachment(docId, name) {
     try {
-      // need to try and get the rev first
-      let doc = await this.pdb.get(docId)
-      let result = await this.pdb.putAttachment(docId, attachment.id, doc._rev, attachment.data, attachment.type)
-      return result
+      let doc = await this.pdb.getAttachment(docId, name)
+      return doc
     } catch (err) {
       console.log(err)
-      return err
+    }
+  }
+
+  async getAttachments(docId) {
+    console.log(docId)
+    try {
+      let doc = await this.pdb.get(docId, {attachments: true, binary: true});
+      return doc._attachments
+    } catch (err) {
+      console.log(err);
     }
   }
 

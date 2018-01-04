@@ -13,6 +13,7 @@ import firebase from 'firebase'
 export class AttachmentService {
 
   path: any
+  blobs: any
 
 
   constructor(
@@ -24,20 +25,6 @@ export class AttachmentService {
     public platform: Platform
     ) {
     this.path = 'cdvfile://localhost/persistent/'
-  }
-
-
-  async saveAttachments(entry) {
-    console.log("get attachment")
-    // build array of assets for easy iteration
-    let assets = this.flattenAssetArray(entry)
-    // do stuff
-    await Promise.all(assets.map(async (asset) => {
-      let url = await this.getURL(entry.id, asset)
-      // on a device? download the audio
-    }))
-    // console.log("done downloads, save entries")
-    this.entryService.saveEntry(entry)
   }
 
 
@@ -56,48 +43,53 @@ export class AttachmentService {
     return assets
   }
 
-  async getURL(id, asset) {
-    console.log("get url", id, asset.id)
-    await firebase.storage().ref(asset.type).child(asset.id).getDownloadURL()
-    .then((url) => {
-      asset.path = url
-      this.download(id, asset)      
-    })
-    // await this.timeout(3000)
-    return asset.path
+
+
+  async saveAttachments(entry) {
+    console.log("save attachments")
+    // build array of assets for easy iteration
+    let assets = this.flattenAssetArray(entry)
+    this.blobs = []
+    console.log("asset array for", entry.lx, assets)
+        
+
+    let promises = assets.map((asset)=>this.download(entry.id, asset))
+
+    // get the attachments
+    await Promise.all(promises)
+      .then((blobs:any) => {
+        
+        console.log("blobs from promises", blobs)
+
+        // compile attachments for bulk add
+        let attachments = {}   
+        for(let blob of blobs) {
+          attachments[blob.name] = {
+            content_type: blob._body.type,
+            data: blob.blob()
+          }
+        }
+        // save the entry with attachments
+        let doc = {"_id":entry.id, "data":entry, "_attachments":attachments}
+        this.entryService.saveEntry(doc)
+      })
+      .catch((err)=>console.log(err))
   }
 
-
-  download(id, asset) {
-
-    // if we're in the browser, change url to use proxy for CORS issue
-    // change to using an app constant instead of this...
-    // https://firebasestorage.googleapis.com/v0
-    let url = asset.path.replace("https://firebasestorage.googleapis.com/v0", "/v0")
-
-    // set the response so we get type info and size etc
+  download(entryId, asset) {
     let options = {responseType: ResponseContentType.Blob}
 
-    this.http.get(url, options)
-      .subscribe(async (data:any) => {
-        console.log(data)
-        // save the attachment to the doc
-        try {
-          var attachment = {id: asset.id, data: data.blob(), type: data._body.type}
-          var result = await this.databaseService.addAttachment(id, attachment)
-          console.log(result)
-        } catch (err) {
-          console.log(err)
-        }
-
-      })
+    return new Promise((resolve, reject) => {
+      firebase.storage().ref(asset.type).child(asset.id).getDownloadURL()
+        .then((url) => {
+          
+          this.http.get(url, options).subscribe(async(data:any) => {
+            data["name"] = asset.id
+            // this.blobs.push(data)
+            resolve(data)
+          }) //subscribe
+        }) //then
+    })// promise
   }
-
-
-
-  timeout(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
-
 
 }

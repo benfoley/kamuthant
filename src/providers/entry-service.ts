@@ -127,10 +127,10 @@ export class EntryService {
   }
 
 
-  saveEntry(entry) {
+  saveEntry(doc) {
     return new Promise(resolve => {
       // Save the entry to pouch
-      let doc = {"_id": entry.id, "data": entry}
+      // let doc = {"_id": entry.id, "data": entry}
       this.databaseService.insertOrUpdate(doc)
         .then((res)=>{
           resolve()
@@ -165,5 +165,13 @@ export class EntryService {
       }))
     }
     this._entries$.next( arr )
+  }
+  
+  async getAttachment(entry, name) {
+   return await this.databaseService.getAttachment(entry.id, name)
+  }
+  async getAttachments(entry) {
+    console.log(entry.id)
+    return await this.databaseService.getAttachments(entry.id)
   }
 }
