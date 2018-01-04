@@ -34,6 +34,32 @@ For now, set the Storage rules to allow for public read access
     }
 
 
+Set CORS by creating a `cors.json` file with the following
+
+```
+[
+  {
+    "origin": ["*"],
+    "method": ["GET"],
+    "maxAgeSeconds": 3600
+  }
+]
+```
+
+Then run this (replace the url with your bucket's url)
+
+    gsutil cors set cors.json gs://your-bucket-url
+
+If you want to check CORS in the browser, set a local proxy
+https://blog.ionicframework.com/handling-cors-issues-in-ionic/
+
+Link the firebase project by running
+
+    firebase init
+
+Follow the prompts. Note that you want a single-page app, and use www as the public dir.
+
+
 Copy the firebase config settings from `Overview > Add Firebase to your web app` to the `/src/assets/js/firebase-worker.js` and `/src/app/app.module.ts` We need: 
 
 - apiKey
