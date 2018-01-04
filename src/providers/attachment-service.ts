@@ -1,12 +1,12 @@
-import { Injectable } from '@angular/core';
+import { Injectable } from '@angular/core'
 import { DomSanitizer, SafeStyle, SafeUrl } from '@angular/platform-browser'
 import { Platform } from 'ionic-angular'
-import { Http } from '@angular/http';
-import 'rxjs/add/operator/map';
-import { Transfer, FileUploadOptions, TransferObject } from '@ionic-native/transfer';
+import { Http, ResponseContentType } from '@angular/http'
 import { File } from '@ionic-native/file'
 import { EntryService } from "./entry-service"
+import { DatabaseService } from './database-service'
 
+import 'rxjs/add/operator/map'
 import firebase from 'firebase'
 
 @Injectable()
@@ -17,10 +17,11 @@ export class AttachmentService {
 
   constructor(
     private sanitizer: DomSanitizer,
-    public platform: Platform,
-    private transfer: Transfer,
+    public databaseService: DatabaseService,
+    public entryService: EntryService,
     private file: File,
-    public entryService: EntryService
+    public http: Http,
+    public platform: Platform
     ) {
     this.path = 'cdvfile://localhost/persistent/'
   }
@@ -32,11 +33,13 @@ export class AttachmentService {
     let assets = this.flattenAssetArray(entry)
     // do stuff
     await Promise.all(assets.map(async (asset) => {
-      await this.getURL(asset)
+      let url = await this.getURL(entry.id, asset)
+      // on a device? download the audio
     }))
     // console.log("done downloads, save entries")
     this.entryService.saveEntry(entry)
   }
+
 
   flattenAssetArray(entry) {
     let assets = []
@@ -53,13 +56,41 @@ export class AttachmentService {
     return assets
   }
 
-  async getURL(asset) {
-    console.log("get url")
+  async getURL(id, asset) {
+    console.log("get url", id, asset.id)
     await firebase.storage().ref(asset.type).child(asset.id).getDownloadURL()
-    .then((url) => asset.path = url)
+    .then((url) => {
+      asset.path = url
+      this.download(id, asset)      
+    })
     // await this.timeout(3000)
-    console.log(asset.path)
     return asset.path
+  }
+
+
+  download(id, asset) {
+
+    // if we're in the browser, change url to use proxy for CORS issue
+    // change to using an app constant instead of this...
+    // https://firebasestorage.googleapis.com/v0
+    let url = asset.path.replace("https://firebasestorage.googleapis.com/v0", "/v0")
+
+    // set the response so we get type info and size etc
+    let options = {responseType: ResponseContentType.Blob}
+
+    this.http.get(url, options)
+      .subscribe(async (data:any) => {
+        console.log(data)
+        // save the attachment to the doc
+        try {
+          var attachment = {id: asset.id, data: data.blob(), type: data._body.type}
+          var result = await this.databaseService.addAttachment(id, attachment)
+          console.log(result)
+        } catch (err) {
+          console.log(err)
+        }
+
+      })
   }
 
 

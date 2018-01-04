@@ -72,7 +72,6 @@
     <plugin name="cordova-plugin-splashscreen" spec="~4.0.1" />
     <plugin name="cordova-plugin-file" spec="~4.3.2" />
     <plugin name="cordova-plugin-media" spec="~3.0.0" />
-    <plugin name="cordova-plugin-file-transfer" spec="~1.6.2" />
     <preference name="SplashScreen" value="screen" />
     <preference name="SplashScreenDelay" value="3000" />
     <engine name="ios" spec="~4.3.1" />

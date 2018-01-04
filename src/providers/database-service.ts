@@ -22,8 +22,8 @@ export class DatabaseService {
     ) {
 
     // create or open the db
-    this.pdb  = new PouchDB('Dictionary');
-    this.pdbi = new PouchDB('Index');
+    this.pdb  = new PouchDB('Dictionary', {auto_compaction: true})
+    this.pdbi = new PouchDB('Index', {auto_compaction: true})
 
     connectivityService.status.subscribe((status) => {
       this.appOnline = (status !== 'offline')
@@ -105,6 +105,20 @@ export class DatabaseService {
       return await this.pdb.put(doc)
     } catch(err) {
       return await this.pdb.put(doc)
+    }
+  }
+
+
+  // save an attachment - overwrite existing by using the same attachmentId
+  async addAttachment(docId, attachment) {
+    try {
+      // need to try and get the rev first
+      let doc = await this.pdb.get(docId)
+      let result = await this.pdb.putAttachment(docId, attachment.id, doc._rev, attachment.data, attachment.type)
+      return result
+    } catch (err) {
+      console.log(err)
+      return err
     }
   }
 
