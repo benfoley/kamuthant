@@ -1,10 +1,6 @@
 import { Injectable } from '@angular/core'
-import { DomSanitizer, SafeStyle, SafeUrl } from '@angular/platform-browser'
-import { Platform } from 'ionic-angular'
 import { Http, ResponseContentType } from '@angular/http'
-import { File } from '@ionic-native/file'
 import { EntryService } from "./entry-service"
-import { DatabaseService } from './database-service'
 
 import 'rxjs/add/operator/map'
 import firebase from 'firebase'
@@ -15,54 +11,26 @@ export class AttachmentService {
   path: any
   blobs: any
 
-
   constructor(
-    private sanitizer: DomSanitizer,
-    public databaseService: DatabaseService,
     public entryService: EntryService,
-    private file: File,
     public http: Http,
-    public platform: Platform
     ) {
-    this.path = 'cdvfile://localhost/persistent/'
   }
 
-
-  flattenAssetArray(entry) {
-    let assets = []
-    if (entry.assets.images) {        
-      for (let image of entry.assets.images) {
-        assets.push(image)
-      }
-    }
-    if (entry.assets.audio) {
-      for (let audio of entry.assets.audio) {
-        assets.push(audio)
-      }
-    }
-    return assets
-  }
-
-
-
+  // Pouch doesn't seem to handle attachments organised in groups, 
+  // so we need to flatten our image/audio groups into a single array
   async saveAttachments(entry) {
-    console.log("save attachments")
-    // build array of assets for easy iteration
-    let assets = this.flattenAssetArray(entry)
     this.blobs = []
-    console.log("asset array for", entry.lx, assets)
-        
 
-    let promises = assets.map((asset)=>this.download(entry.id, asset))
+    let imagePromises = entry.assets.images.map((asset)=>this.download(entry.id, asset))
+    let audioPromises = entry.assets.audio.map((asset)=>this.download(entry.id, asset))
+    let promises = imagePromises.concat(audioPromises)
 
     // get the attachments
     await Promise.all(promises)
       .then((blobs:any) => {
-        
-        console.log("blobs from promises", blobs)
-
         // compile attachments for bulk add
-        let attachments = {}   
+        let attachments = {}
         for(let blob of blobs) {
           attachments[blob.name] = {
             content_type: blob._body.type,
@@ -82,10 +50,8 @@ export class AttachmentService {
     return new Promise((resolve, reject) => {
       firebase.storage().ref(asset.type).child(asset.id).getDownloadURL()
         .then((url) => {
-          
           this.http.get(url, options).subscribe(async(data:any) => {
             data["name"] = asset.id
-            // this.blobs.push(data)
             resolve(data)
           }) //subscribe
         }) //then
