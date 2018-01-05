@@ -14,12 +14,13 @@ export class WordlistEntry implements AfterViewInit {
 
   @Input() sortKey: any;
   @Input() entry: any;
+  @Input() attachments: any;
 
   @ViewChild("waveform") waveform: ElementRef
 
   image: any
   wavesurfer: any
-  attachments: any = []
+  // attachments: any = []
   audios: any = []
 
   constructor(
@@ -27,22 +28,21 @@ export class WordlistEntry implements AfterViewInit {
     public entryService: EntryService,
     ) {
     console.log("WordlistEntry")
-
-
   }
 
   async ngOnInit() {
     console.log(this.entry)
-
+    console.log(this.attachments)
+    // separate the audio from the images
+    for (let i in this.attachments) {
+      if (this.attachments[i].content_type=="audio/wav") {
+        this.audios.push(this.attachments[i])
+      }
+    }
 
   }
 
   async ngAfterViewInit() {
-
-    this.attachments = await this.entryService.getAttachments(this.entry)
-    for (let i in this.attachments) {
-      if (this.attachments[i].content_type=="audio/wav") this.audios.push(this.attachments[i])
-    }
 
     if (this.audios.length > 0){
       let blob = this.audios[0].data

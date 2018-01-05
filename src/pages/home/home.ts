@@ -7,6 +7,7 @@ import { ConnectivityService } from "../../providers/connectivity-service"
 // import { LanguageChooser } from "../../components/language-chooser/language-chooser.module"
 import { LanguageService } from '../../providers/language-service'
 import { SyncService } from '../../providers/sync-service'
+import { Observable } from "rxjs/Observable";
 
 
 @IonicPage()

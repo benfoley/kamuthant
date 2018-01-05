@@ -9,10 +9,7 @@
 
 <ion-content padding>
 
-
-
-
-  <div *ngIf="entries.length == 0">
+  <div *ngIf="noEntries">
     <p class="center">No entries for {{ letter }}</p>
   </div>
 <!-- 
@@ -37,8 +34,9 @@
 
     <ion-item
       *virtualItem='let entry'>
+      <!-- {{entry| json}} -->
 
-      <wordlist-entry item-content [sortKey]='language.sortKey' [entry]='entry'></wordlist-entry> 
+      <wordlist-entry item-content [sortKey]='language.sortKey' [entry]='entry.data' [attachments]='entry._attachments'></wordlist-entry>
 
     </ion-item>
 

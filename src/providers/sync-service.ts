@@ -101,7 +101,6 @@ export class SyncService {
 
 
   async loadAll() {
-    console.log("load all happens from home.ts")
     return true
   }
 

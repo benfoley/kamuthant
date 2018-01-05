@@ -23,7 +23,7 @@ export class DatabaseService {
 
     // create or open the db
     this.cdb  = new PouchDB('Config', {auto_compaction: true})
-    this.pdb  = new PouchDB('Dictionary', {auto_compaction: false})
+    this.pdb  = new PouchDB('Dictionary', {auto_compaction: true})
 
     connectivityService.status.subscribe((status) => {
       this.appOnline = (status !== 'offline')
@@ -71,8 +71,8 @@ export class DatabaseService {
 
   async getFromPouch(key) {
     try {
-      let doc = await this.pdb.get(key, {include_docs: true})
-      return doc.data
+      let doc = await this.pdb.get(key, {include_docs: true, attachments: true, binary: true})
+      return doc
     } catch (err) {
       console.log(err)
     }
@@ -118,7 +118,6 @@ export class DatabaseService {
   }
 
   async getAttachments(docId) {
-    console.log(docId)
     try {
       let doc = await this.pdb.get(docId, {attachments: true, binary: true});
       return doc._attachments

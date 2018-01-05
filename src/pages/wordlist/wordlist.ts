@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectorRef } from '@angular/core';
 import { IonicPage, NavController, NavParams } from 'ionic-angular';
 import { Observable } from "rxjs/Observable";
 import { DatabaseService } from "../../providers/database-service"
@@ -35,6 +35,7 @@ export class Wordlist {
 
   entrySub: any
   langSub: any
+  noEntries: boolean
 
   constructor(
     public navCtrl: NavController,
@@ -42,6 +43,7 @@ export class Wordlist {
     public databaseService: DatabaseService,
     public entryService: EntryService,
     public languageService: LanguageService,
+    private cd: ChangeDetectorRef
     ) {
 
   }
@@ -52,10 +54,13 @@ export class Wordlist {
     this.letter = this.navParams.data.letter
 
     this.entrySub = this.entryService.entries$.subscribe((entries) => {
-      if (Array.isArray(entries)) this.entries = entries
+      console.log("entries", entries.length, entries)
+      this.entries = entries
+
     })
 
     this.langSub = this.languageService.language$.subscribe( async (language) => {
+      console.log("lang sub")
       this.visibility = "hidden"
       this.language = language
       this.letter = this.navParams.data.letter
@@ -64,6 +69,7 @@ export class Wordlist {
       
       setTimeout(() => {
         this.visibility = "visible"  
+        this.noEntries = (this.entries.length===0) ? true : false
       }, 500)
       
 
@@ -74,5 +80,7 @@ export class Wordlist {
     this.entrySub.unsubscribe()
     this.langSub.unsubscribe()
   }
+
+
 
 }

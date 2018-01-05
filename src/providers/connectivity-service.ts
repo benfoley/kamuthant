@@ -32,7 +32,6 @@ export class ConnectivityService {
   reportConnection() {
     if (navigator.onLine) {
       if ('connection' in navigator) {
-        console.log("online", navigator)
         if (navigator.connection.effectiveType) this.onlineSubject.next("online "+navigator.connection.effectiveType)
         else if (navigator.connection.type) this.onlineSubject.next(navigator.connection.type)
         else this.onlineSubject.next("online")

@@ -13,7 +13,7 @@ export class EntryService {
   entriesAll: any = {}
   entriesIndex: any
   // Subscribe to this for current filtered entry list
-  _entries$: BehaviorSubject<any> = new BehaviorSubject({})
+  _entries$: BehaviorSubject<any> = new BehaviorSubject([])
   _entriesIndex$: BehaviorSubject<any> = new BehaviorSubject({})
 
   // The currently selected language
@@ -174,6 +174,7 @@ export class EntryService {
       await Promise.all( items.map( async (item) => {
         await this.databaseService.getFromPouch(item.id).then((res:any)=>{
           if (res) {
+            console.log(res)
             arr.push(res)
           }
         })
@@ -182,11 +183,10 @@ export class EntryService {
     this._entries$.next( arr )
   }
   
-  async getAttachment(entry, name) {
-   return await this.databaseService.getAttachment(entry.id, name)
-  }
-  async getAttachments(entry) {
-    console.log(entry.id)
-    return await this.databaseService.getAttachments(entry.id)
-  }
+  // async getAttachment(entry, name) {
+  //  return await this.databaseService.getAttachment(entry.id, name)
+  // }
+  // async getAttachments(entry) {
+  //   return await this.databaseService.getAttachments(entry.id)
+  // }
 }
