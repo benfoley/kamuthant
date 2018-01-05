@@ -21,6 +21,7 @@ export class Entry {
 
   @ViewChild("waveform") waveform: ElementRef
 
+
   entriesIndex$: Observable<any>
   entriesIndex: any
   content: any
@@ -42,7 +43,8 @@ export class Entry {
     public entryService: EntryService,
     public languageService: LanguageService,
     public databaseService: DatabaseService,
-    public cd: ChangeDetectorRef
+    public cd: ChangeDetectorRef,
+
     ) {
     this.id = this.navParams.data.id
     this.adjacentIds = {back: false, forward: false}
@@ -96,7 +98,13 @@ export class Entry {
     // Might need to change this to get swiping to work
     // if ((! this.search) && (this.navCtrl.length() > 3)) this.navCtrl.removeView(this.navCtrl.getPrevious(), {})
   }
+ionViewWillEnter() {
+this.navCtrl.swipeBackEnabled=false
+}
 
+ionViewWillLeave() {
+this.navCtrl.swipeBackEnabled=true
+}
 
   play() {
     this.wavesurfer.play()
@@ -105,14 +113,14 @@ export class Entry {
   swipeEvent(event) {
     if (event.direction == 2) this.next()
     // let's use the built-in back swiping functionality
-    // if (event.direction == 4) this.prev()
+    if (event.direction == 4) this.prev()
   }
 
   // this is just for the back button
   prev() {
-    this.navCtrl.pop()
-    // if (this.adjacentIds.back) this.goToEntry("back")
-    // else this.gotoWordlist(this.letter)
+    // this.navCtrl.pop()
+    if (this.adjacentIds.back) this.goToEntry("back")
+    else this.gotoWordlist()
   }
 
   // forward button or swipe
@@ -122,7 +130,7 @@ export class Entry {
   }
 
   gotoWordlist() {
-    this.navCtrl.push('words', {letter:this.letter})
+    this.navCtrl.setRoot('words', {letter:this.letter})
   }
   
   goToEntry(direction) {
