@@ -96,7 +96,6 @@ export class EntryService {
     }
   }
   async getIndex(){
-    console.log("get entries index")
     try {
       this.entriesIndex = await this.databaseService.getConfig("index")
       this._entriesIndex$.next(this.entriesIndex)
@@ -154,12 +153,9 @@ export class EntryService {
     })
   }
   
-  getEntry(id) {
+  async getEntry(id) {
     try {
-      this.databaseService.getFromPouch(id).then((res)=>{
-        console.log(res)
-        return res
-      })
+      return await this.databaseService.getFromPouch(id)
     } catch(err){
       console.log("getEntry error", err)
     }
@@ -174,7 +170,6 @@ export class EntryService {
       await Promise.all( items.map( async (item) => {
         await this.databaseService.getFromPouch(item.id).then((res:any)=>{
           if (res) {
-            console.log(res)
             arr.push(res)
           }
         })
@@ -183,6 +178,28 @@ export class EntryService {
     this._entries$.next( arr )
   }
   
+
+
+  async groupAttachments(attachments) {
+    let audios = [], images = []
+
+    for (let i in attachments) {
+      let att = attachments[i]
+      if (att.content_type=="audio/wav") {
+        audios.push(att)
+      }
+      if (att.content_type=="image/jpeg") {
+        images.push(this.blobToUrl(att.data))
+      }
+    }
+    console.log("done groupAttachments")
+    return {audios:audios, images:images}
+  }
+
+  blobToUrl(blob) {
+    return URL.createObjectURL(blob)
+  }
+
   // async getAttachment(entry, name) {
   //  return await this.databaseService.getAttachment(entry.id, name)
   // }

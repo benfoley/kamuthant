@@ -1,9 +1,11 @@
-import { Component, ChangeDetectorRef } from '@angular/core';
+import { Component, ChangeDetectorRef, ViewChild, ElementRef } from '@angular/core';
 import { IonicPage, NavController, NavParams } from 'ionic-angular';
 import { EntryService } from "../../providers/entry-service"
 import { DatabaseService } from "../../providers/database-service"
 import { LanguageService } from "../../providers/language-service"
 import { Observable } from "rxjs/Observable";
+
+import WaveSurfer from 'wavesurfer.js'
 
 
 @IonicPage({
@@ -17,9 +19,14 @@ import { Observable } from "rxjs/Observable";
 })
 export class Entry {
 
+  @ViewChild("waveform") waveform: ElementRef
+
   entriesIndex$: Observable<any>
   entriesIndex: any
-  entry: any
+  content: any
+  wavesurfer: any
+  audios: any = []
+  images: any = []
   id: string
   nextId: any
   index: number
@@ -36,27 +43,49 @@ export class Entry {
   }
 
   async ngOnInit() {
-    console.log(this.navParams.data)
+    console.log("ngOnInit")
     this.id = this.navParams.data.id
 
     // get the entry
     // 
 
-    this.databaseService.getFromPouch(this.id).then((res)=>{
-      console.log(res)
-      this.entry = res
-    })
-
+    let res = await this.entryService.getEntry(this.id)
+    console.log("after get entry")
+    this.content = res.data
+    let attachments = await this.entryService.groupAttachments(res._attachments)
+    console.log(attachments)
+    this.audios = attachments.audios
+    this.images = attachments.images
+    this.prepareAudio()    
 
 
     // this.nextId = this.navParams.data.nextId
     // this.search = this.navParams.data.search
     
-
     // if (! this.search) {
     //   this.entryService.entriesIndex$.subscribe( (data) => this.entriesIndex = data )
     // }
-    
+  }
+
+  ionViewDidLoad() {
+  }
+
+  prepareAudio() {
+    console.log("prepareAudio")
+    if (this.audios.length > 0){
+      console.log("have audio")
+      let blob = this.audios[0].data
+      this.wavesurfer = WaveSurfer.create({
+        container: '#waveform',
+        height:0
+      })
+      // WaveSurfer with iOS Safari doesn't like loading blob, so use a buffer instead
+      let fileReader = new FileReader();
+      fileReader.onload = (event:any) => {
+          this.wavesurfer.loadArrayBuffer(event.target.result)
+      };
+      fileReader.readAsArrayBuffer(blob);
+    }    
   }
 
 
@@ -65,6 +94,11 @@ export class Entry {
     if ((! this.search) && (this.navCtrl.length() > 3)) this.navCtrl.removeView(this.navCtrl.getPrevious(), {})
   }
 
+
+  play() {
+    console.log("playing")
+    this.wavesurfer.play()
+  }
 
   // Track swipes
   swipeEvent(event) {

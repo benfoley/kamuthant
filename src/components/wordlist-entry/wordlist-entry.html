@@ -41,19 +41,21 @@
     </ion-col>
 
 
-    <ion-col col-2 class="images" *ngIf="images.length>0">
+    <ion-col col-2 class="images" *ngIf="images.length > 0">
       <div
         class="hw-image"
         [ngStyle]="{'background-image': 'url(' + images[0] + ')'}"
         ></div>
     </ion-col>
 
-    <ion-col col-2 *ngIf="audios.length>0">
-      <div #waveform id="waveform"></div>
+    <ion-col col-2 *ngIf="audios.length > 0">
       <button ion-fab mini color="light" (click)='play()' data-tap-disabled="true">
         <ion-icon [name]="(playing && master) ? 'pause' : 'play'"></ion-icon>
       </button>
     </ion-col> 
+
+    <!-- leave this outside the col so ewavesurfer can find it while the entries are loading -->
+    <div #waveform id="waveform"></div>
 
   </ion-row>
 </ion-grid>

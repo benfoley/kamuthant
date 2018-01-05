@@ -1,4 +1,4 @@
-import { Component, ViewChild, AfterViewInit, ElementRef, Input } from '@angular/core';
+import { Component, ViewChild, ElementRef, Input } from '@angular/core';
 import { NavController } from 'ionic-angular';
 import { EntryService } from "../../providers/entry-service"
 
@@ -9,7 +9,7 @@ import WaveSurfer from 'wavesurfer.js'
   selector: 'wordlist-entry',
   templateUrl: 'wordlist-entry.html'
 })
-export class WordlistEntry implements AfterViewInit {
+export class WordlistEntry {
 
   @Input() sortKey: any;
   @Input() entry: any;
@@ -31,23 +31,11 @@ export class WordlistEntry implements AfterViewInit {
     console.log("WordlistEntry ngAfterViewInit")
       
     this.content = this.entry.data
-    await this.groupAttachments()
+    let attachments = await this.entryService.groupAttachments(this.entry._attachments)
+    console.log(attachments)
+    this.audios = attachments.audios
+    this.images = attachments.images
     this.prepareAudio()
-  }
-
-  async groupAttachments() {
-    this.audios = []
-    this.images = []
-    for (let i in this.entry._attachments) {
-      let att = this.entry._attachments[i]
-      if (att.content_type=="audio/wav") {
-        this.audios.push(att)
-      }
-      if (att.content_type=="image/jpeg") {
-        this.images.push(this.blobToUrl(att.data))
-      }
-    }
-    return 
   }
 
   prepareAudio() {
@@ -64,10 +52,6 @@ export class WordlistEntry implements AfterViewInit {
       };
       fileReader.readAsArrayBuffer(blob);
     }    
-  }
-
-  blobToUrl(blob) {
-    return URL.createObjectURL(blob)
   }
 
   play() {

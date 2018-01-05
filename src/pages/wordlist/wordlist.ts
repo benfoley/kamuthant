@@ -59,7 +59,7 @@ export class Wordlist {
       console.log("wordlist entries", entries.length, entries)
       this.entries = entries
     })
-
+    
     this.langSub = this.languageService.language$.subscribe( async (language) => {
       this.visibility = "hidden"
       this.language = language
@@ -73,9 +73,8 @@ export class Wordlist {
         this.visibility = "visible"  
         this.noEntries = (this.entries.length===0) ? true : false
       }, 500)
-      
-
     })
+
   }
 
   ngOnDestroy() {

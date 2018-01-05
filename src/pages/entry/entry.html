@@ -6,49 +6,55 @@
 </ion-header>
 
 <ion-content padding class="flex">
+    
+  <div #waveform id="waveform"></div>
 
-  <div class="entry-container" *ngIf="entry">
+  <div class="entry-container" *ngIf="content">
     <section class="entry" (swipe)="swipeEvent($event)">
 
-      <div *ngIf="entry.assets">
-        <div
-          class="entry-image"
-          *ngIf="entry.assets.images && entry.assets.images[0].path"
-          [ngStyle]="{'background-image': 'url(' + entry.assets.images[0].path + ')'}"
-          ></div>
-      </div>
+      <ion-grid>
+        <ion-row>
+          <ion-col>
+            <div class="hw">
+              <h1 *ngIf="content.lxc">{{content.lxc}}</h1>
+              <h1 *ngIf="! content.lxc">{{content.lx}}</h1>
+            </div>
 
-      <div class="hw">
-        <h1 *ngIf="entry.lxc">{{entry.lxc}}</h1>
-        <h1 *ngIf="! entry.lxc">{{entry.lx}}</h1>
-      </div>
+            <div class="full-form" *ngIf="content.lxc && content.lx">
+              <p>Full form: {{content.lx}}</p>
+            </div>
+          </ion-col>
 
-      <div class="full-form" *ngIf="entry.lxc && entry.lx">
-        <p>Full form: {{entry.lx}}</p>
-      </div>
+          <ion-col col-2 *ngIf="audios.length > 0">
+            <button ion-fab mini color="light" (click)='play()' data-tap-disabled="true">
+              <ion-icon [name]="(playing && master) ? 'pause' : 'play'"></ion-icon>
+            </button>
+          </ion-col>
 
-      <div
-        class="image square"
-        *ngFor="let image of entry.image"
-        [style.background-image]='image.path'>
-      </div>
+        </ion-row>
+      </ion-grid>
 
-      <div class="senses" *ngIf='entry.senses'>
-        <div *ngIf='entry.senses.length > 0'>
-          <ion-card *ngFor="let sense of entry.senses">
+
+      <div class="senses" *ngIf='content.senses'>
+        <div *ngIf='content.senses.length > 0'>
+          <ion-card *ngFor="let sense of content.senses">
             <ion-card-content>
               <entry-sense [sense]='sense'></entry-sense>
             </ion-card-content>
           </ion-card>
         </div>
-        <div *ngIf='! entry.senses.length'>
+        <div *ngIf='! content.senses.length'>
           <ion-card>
             <ion-card-content>
-              <entry-sense [sense]='entry.senses'></entry-sense>
+              <entry-sense [sense]='content.senses'></entry-sense>
             </ion-card-content>
           </ion-card>
         </div>
       </div>
+      <!-- / senses -->
+
+<!-- images -->
+
     </section>
   </div>
 
