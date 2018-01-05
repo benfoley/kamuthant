@@ -5,12 +5,12 @@
 
 </ion-header>
 
-<ion-content padding class="flex">
+<ion-content padding class="flex entry-page">
     
   <div #waveform id="waveform"></div>
 
-  <div class="entry-container" *ngIf="content">
-    <section class="entry" (swipe)="swipeEvent($event)">
+  <div class="entry-container" *ngIf="content" (swipe)="swipeEvent($event)">
+    <section class="entry">
 
       <ion-grid>
         <ion-row>
@@ -53,28 +53,24 @@
       </div>
       <!-- / senses -->
 
-<!-- images -->
-
     </section>
   </div>
 
-<ion-grid>
-  <ion-row id="page-nav">
+  <ion-grid id="page-nav">
+    <ion-row>
+      <ion-col>
+        <button ion-button icon-only clear color="dark" (click)="prev()" *ngIf="adjacentIds.back">
+          <ion-icon name="arrow-dropleft-circle"></ion-icon>
+        </button>
+      </ion-col>
 
-  <ion-col>
-    <button ion-button icon-only clear color="dark" (click)="prev()" *ngIf="adjacentIds.back">
-      <ion-icon name="arrow-dropleft-circle"></ion-icon>
-    </button>
-  </ion-col>
+      <ion-col>
+        <button ion-button icon-only clear color="dark" (click)="next()" *ngIf="adjacentIds.forward">
+          <ion-icon name="arrow-dropright-circle"></ion-icon>
+        </button>
+      </ion-col>
 
-  <ion-col>
-    <button ion-button icon-only clear color="dark" (click)="next()" *ngIf="adjacentIds.forward">
-      <ion-icon name="arrow-dropright-circle"></ion-icon>
-    </button>
-  </ion-col>
-
-  </ion-row>
-</ion-grid>
-
+    </ion-row>
+  </ion-grid>
 
 </ion-content>
