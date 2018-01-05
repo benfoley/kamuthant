@@ -81,6 +81,7 @@ export class Wordlist {
   }
 
   gotoHome() {
-    this.navCtrl.setRoot('Home')
+    let animationOptions = {animate: true, direction: "back"}
+    this.navCtrl.setRoot('Home', {}, animationOptions)
   }
 }

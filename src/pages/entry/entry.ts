@@ -130,7 +130,9 @@ this.navCtrl.swipeBackEnabled=true
   }
 
   gotoWordlist() {
-    this.navCtrl.setRoot('words', {letter:this.letter})
+    let paramOptions = {letter: this.letter}
+    let animationOptions = {animate: true, direction: "back"}
+    this.navCtrl.setRoot('words', paramOptions, animationOptions)
   }
   
   goToEntry(direction) {
