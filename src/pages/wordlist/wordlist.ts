@@ -36,6 +36,8 @@ export class Wordlist {
   entrySub: any
   langSub: any
   noEntries: boolean
+  audios: any = []
+  images: any = []
 
   constructor(
     public navCtrl: NavController,
@@ -54,18 +56,18 @@ export class Wordlist {
     this.letter = this.navParams.data.letter
 
     this.entrySub = this.entryService.entries$.subscribe((entries) => {
-      console.log("entries", entries.length, entries)
+      console.log("wordlist entries", entries.length, entries)
       this.entries = entries
-
     })
 
     this.langSub = this.languageService.language$.subscribe( async (language) => {
-      console.log("lang sub")
       this.visibility = "hidden"
       this.language = language
       this.letter = this.navParams.data.letter
 
-      if (this.letter) await this.entryService.getEntriesByLetter(this.letter)
+      if (this.letter) {
+        await this.entryService.getEntriesByLetter(this.letter)
+      }
       
       setTimeout(() => {
         this.visibility = "visible"  
@@ -80,7 +82,6 @@ export class Wordlist {
     this.entrySub.unsubscribe()
     this.langSub.unsubscribe()
   }
-
 
 
 }

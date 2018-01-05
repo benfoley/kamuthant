@@ -36,7 +36,11 @@
       *virtualItem='let entry'>
       <!-- {{entry| json}} -->
 
-      <wordlist-entry item-content [sortKey]='language.sortKey' [entry]='entry.data' [attachments]='entry._attachments'></wordlist-entry>
+      <wordlist-entry 
+        item-content 
+        [sortKey]='language.sortKey' 
+        [entry]='entry' 
+        ></wordlist-entry>
 
     </ion-item>
 

@@ -1,51 +1,60 @@
-<ion-grid item-content *ngIf='sortKey=="lx"'>
- 
+<ion-grid item-content>
   <ion-row>
-    <ion-col class="data">
-        <div (click)='goToEntry(entry)'>
-          <h1 *ngIf="entry.lxc">{{entry.lxc}}</h1>
-          <h1 *ngIf="! entry.lxc" >{{entry.lx}}</h1>
-        </div>
-        <div *ngIf='entry.senses'>
-          <ul *ngIf='entry.senses.length > 0'>
-            <li *ngFor="let sense of entry.senses">
-              <span *ngIf="sense"> {{sense.def}} </span>
-            </li>
-          </ul>
-           <ul *ngIf='(! entry.senses.length) && (entry.senses.def)'>
-            <li>
-              <span *ngIf="entry.senses.def"> {{entry.senses.def}} </span>
-            </li>
-          </ul>
-        </div>
+
+
+    <ion-col class="data" *ngIf='sortKey=="lx"'>
+      <div (click)='goToEntry(content)'>
+        <h1 *ngIf="content.lxc">{{content.lxc}}</h1>
+        <h1 *ngIf="! content.lxc" >{{content.lx}}</h1>
+      </div>
+      <div *ngIf='content.senses'>
+        <ul *ngIf='content.senses.length > 0'>
+          <li *ngFor="let sense of content.senses">
+            <span *ngIf="sense"> {{sense.def}} </span>
+          </li>
+        </ul>
+         <ul *ngIf='(! content.senses.length) && (content.senses.def)'>
+          <li>
+            <span *ngIf="content.senses.def"> {{content.senses.def}} </span>
+          </li>
+        </ul>
+      </div>
     </ion-col>
-    <ion-col col-2 *ngIf="this.audios.length>0">
+
+    <ion-col class="data" *ngIf='sortKey=="def"'>
+      <div (click)='goToEntry(content)'>
+        <div *ngIf='content.senses.length > 0'>
+          <h1 *ngFor="let sense of content.senses">
+            <span *ngIf="sense"> {{sense.def}} </span>
+          </h1>
+        </div>
+         <div *ngIf='(! content.senses.length) && (content.senses.def)'>
+          <h1>
+            <span *ngIf="content.senses.def"> {{content.senses.def}} </span>
+          </h1>
+        </div>
+      </div>
+      <ul>
+        <li *ngIf="content.lxc">{{ content.lxc }}</li>
+        <li *ngIf="! content.lxc">{{ content.lx }}</li>
+      </ul>
+    </ion-col>
+
+
+    <ion-col col-2 class="images" *ngIf="images.length>0">
+      <div
+        class="hw-image"
+        [ngStyle]="{'background-image': 'url(' + images[0] + ')'}"
+        ></div>
+    </ion-col>
+
+    <ion-col col-2 *ngIf="audios.length>0">
       <div #waveform id="waveform"></div>
       <button ion-fab mini color="light" (click)='play()' data-tap-disabled="true">
         <ion-icon [name]="(playing && master) ? 'pause' : 'play'"></ion-icon>
       </button>
-    </ion-col>      
+    </ion-col> 
+
   </ion-row>
 </ion-grid>
 
-
-<ion-grid item-content *ngIf='sortKey=="def"'>
-  <ion-row>
-    <ion-col col-12 class="data">
-      <div *ngIf='entry.senses.length > 0'>
-        <h1 *ngFor="let sense of entry.senses">
-          <span *ngIf="sense"> {{sense.def}} </span>
-        </h1>
-      </div>
-       <div *ngIf='(! entry.senses.length) && (entry.senses.def)'>
-        <h1>
-          <span *ngIf="entry.senses.def"> {{entry.senses.def}} </span>
-        </h1>
-      </div>
-      <ul>
-        <li *ngIf="entry.lxc">{{ entry.lxc }}</li>
-        <li *ngIf="! entry.lxc">{{ entry.lx }}</li>
-      </ul>
-    </ion-col>
-  </ion-row>
-</ion-grid>

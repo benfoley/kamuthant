@@ -3,7 +3,6 @@ import { NavController } from 'ionic-angular';
 import { EntryService } from "../../providers/entry-service"
 
 import WaveSurfer from 'wavesurfer.js'
-import toBuffer from 'blob-to-buffer'
 
 
 @Component({
@@ -14,11 +13,10 @@ export class WordlistEntry implements AfterViewInit {
 
   @Input() sortKey: any;
   @Input() entry: any;
-  @Input() attachments: any;
 
   @ViewChild("waveform") waveform: ElementRef
 
-  image: any
+  content: any
   wavesurfer: any
   audios: any = []
   images: any = []
@@ -27,29 +25,34 @@ export class WordlistEntry implements AfterViewInit {
     public navCtrl: NavController,
     public entryService: EntryService,
     ) {
-    console.log("WordlistEntry")
   }
 
-  async ngOnInit() {
-    console.log(this.entry)
-    console.log(this.attachments)
-    // separate the audio from the images
-    for (let i in this.attachments) {
-      if (this.attachments[i].content_type=="audio/wav") {
-        this.audios.push(this.attachments[i])
+  async ngOnChanges() {
+    console.log("WordlistEntry ngAfterViewInit")
+      
+    this.content = this.entry.data
+    await this.groupAttachments()
+    this.prepareAudio()
+  }
+
+  async groupAttachments() {
+    this.audios = []
+    this.images = []
+    for (let i in this.entry._attachments) {
+      let att = this.entry._attachments[i]
+      if (att.content_type=="audio/wav") {
+        this.audios.push(att)
       }
-      if (this.attachments[i].content_type=="image/jpeg") {
-        this.images.push(this.attachments[i])
+      if (att.content_type=="image/jpeg") {
+        this.images.push(this.blobToUrl(att.data))
       }
     }
-
+    return 
   }
 
-  async ngAfterViewInit() {
-
+  prepareAudio() {
     if (this.audios.length > 0){
       let blob = this.audios[0].data
-
       this.wavesurfer = WaveSurfer.create({
         container: '#waveform',
         height:0
@@ -60,8 +63,11 @@ export class WordlistEntry implements AfterViewInit {
           this.wavesurfer.loadArrayBuffer(event.target.result)
       };
       fileReader.readAsArrayBuffer(blob);
+    }    
+  }
 
-    }
+  blobToUrl(blob) {
+    return URL.createObjectURL(blob)
   }
 
   play() {
