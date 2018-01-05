@@ -103,24 +103,20 @@ export class Entry {
     this.wavesurfer.play()
   }
 
-  // Track swipes
   swipeEvent(event) {
-    console.log("got swipe event", event.direction, event)
-    // if (this.search) return
     if (event.direction == 2) this.next()
+    // let's use the built-in back swiping functionality
     // if (event.direction == 4) this.prev()
   }
 
-
+  // this is just for the back button
   prev() {
-// empty the nav stack?
-    console.log(this.navCtrl.length())
-
     this.navCtrl.pop()
-
     // if (this.adjacentIds.back) this.goToEntry("back")
     // else this.gotoWordlist(this.letter)
   }
+
+  // forward button or swipe
   next() {
     if (this.adjacentIds.forward) this.goToEntry("forward")
     else this.gotoWordlist(this.letter)
@@ -131,7 +127,6 @@ export class Entry {
   }
   
   goToEntry(direction) {
-    console.log("nextId", this.adjacentIds)
     let options = {id: this.adjacentIds[direction].id}
     this.navCtrl.push('entry', options, {animation: "ios-transition", direction: direction})
   }
