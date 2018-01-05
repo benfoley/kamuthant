@@ -57,7 +57,6 @@ export class Wordlist {
 
     this.langSub = this.languageService.language$.subscribe( async (language) => {
       this.visibility = "hidden"
-
       this.language = language
       this.letter = this.navParams.data.letter
 

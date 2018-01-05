@@ -1,13 +1,12 @@
 import { Component } from '@angular/core';
 import { style, animate, transition, trigger } from '@angular/core';
-import { IonicPage, NavController } from 'ionic-angular';
-import { Observable } from "rxjs/Observable";
+import { IonicPage, NavController, Platform } from 'ionic-angular';
 
-import { DatabaseService } from "../../providers/database-service"
 import { EntryService } from "../../providers/entry-service"
 import { ConnectivityService } from "../../providers/connectivity-service"
-import { SyncService } from "../../providers/sync-service"
-import { LanguageChooser } from "../../components/language-chooser/language-chooser.module"
+// import { LanguageChooser } from "../../components/language-chooser/language-chooser.module"
+import { LanguageService } from '../../providers/language-service'
+import { SyncService } from '../../providers/sync-service'
 
 
 @IonicPage()
@@ -28,32 +27,59 @@ import { LanguageChooser } from "../../components/language-chooser/language-choo
 })
 export class Home {
 
-  isLoading: boolean = true
+  // isLoading: boolean = true // todo - change this to sync service observable
   lettersLoading$: Observable<any>
-  lettersLoaded$: Observable<any>
-  lettersLoadingSub: any
+  // lettersLoaded$: Observable<any>
   status$: Observable<any>
+  // entriesIndex$: Observable<any>
+
+
+  languageCode: string
+  entriesIndex: any
+  letters: any = []
+  entriesIndexSub: any
+  languageCodeSub: any
+  isMobile: any
 
   constructor(
     public navCtrl: NavController,
     public connectivityService: ConnectivityService,
-    public databaseService: DatabaseService,
     public entryService: EntryService,
+    public languageService: LanguageService,
     public syncService: SyncService,
+    public platform: Platform,
   ) {
+    this.isMobile = this.platform.is('mobile') 
+    this.lettersLoading$ = this.syncService.lettersLoading$
+    this.status$ = this.connectivityService.onlineSubject
+
+    this.entriesIndexSub = this.entryService.entriesIndex$.subscribe((index) => {
+      this.entriesIndex = index
+      this.updateLetters()
+    })
+
+    this.languageCodeSub = this.languageService.languageCode$.subscribe((code) => {
+      this.languageCode = code
+      this.updateLetters()
+    })
+    // do this on pull-to-refresh too
+    this.syncService.syncCheck()
+
   }
 
-  ngOnInit() {
-    this.lettersLoading$ = this.syncService.lettersLoading$
-    this.lettersLoadingSub = this.syncService.lettersLoading$.subscribe( (letters) => {
-      this.isLoading = (letters.length > 0) ? true : false
-    })
-    this.lettersLoaded$  = this.syncService.lettersLoaded$
-    this.status$ = this.connectivityService.onlineSubject
+  updateLetters() {
+    if (this.entriesIndex && this.languageCode) {
+      this.letters = []
+      for (let i in this.entriesIndex[this.languageCode] ){
+        if (this.letters.indexOf(i) === -1 ) this.letters.push(i)
+      }
+      this.letters.sort()
+    }
   }
 
   ngOnDestroy() {
-    this.lettersLoadingSub.unsubscribe()
+    this.entriesIndexSub.unsubscribe()
+    this.languageCodeSub.unsubscribe()
   }
 
   gotoAbout() {
@@ -65,11 +91,6 @@ export class Home {
   }
 
   gotoWordlist(letter) {
-    // this.entryService.setLetter(letter)
     this.navCtrl.push('words', {letter:letter})
   }
-
-  // status() {
-  //   return this.connectivityService.isOnline()
-  // }
 }

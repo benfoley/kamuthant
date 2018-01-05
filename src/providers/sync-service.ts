@@ -1,4 +1,4 @@
-import { Injectable  } from "@angular/core"
+import { Injectable } from "@angular/core"
 import { AttachmentService } from "./attachment-service"
 import { ConnectivityService } from "./connectivity-service"
 import { DatabaseService } from "./database-service"
@@ -11,12 +11,7 @@ import { BehaviorSubject } from "rxjs/BehaviorSubject"
 export class SyncService {
 
   _lettersLoading$: BehaviorSubject<any> = new BehaviorSubject([])
-  _lettersLoaded$ : BehaviorSubject<any> = new BehaviorSubject(null)
   lettersLoading: any = []
-  lettersLoaded: any = {}
-  languagesSub: any
-  worker: any
-
 
   constructor(
     public attachmentService: AttachmentService,
@@ -25,162 +20,110 @@ export class SyncService {
     public entryService: EntryService,
     public languageService: LanguageService
   ) {
-    this.init()
   }
 
-  get lettersLoading$() {
-    return this._lettersLoading$.asObservable()
-  }
-  get lettersLoaded$() {
-    return this._lettersLoaded$.asObservable()
-  }
+  /*
+  get local db version
+  yes ->  compare it with remote, use local if they match, download all if remote is newer
+  no  ->  download all if there's a connection
+  */
 
-
-/*
-1 online ?
-
-  1a compare db versions
-  1b download data if they differ
-  1c use local if they match
-
-2 offline sole?
-
-  2a get letters from pouch
-  2b get entries from pouch
-  2c show letters for these entries
-
-  3a check connection
-  3b try to download
-
-
-offline?
-  no letters? notify
-
-online?
-  get dbversion
-  if no letters/entries
-    get all letters and entries
-  else
-    download letters
-    download entries since last dbversion
-
- */
-
-  init() {
-
-    // Initialise arrays to track the UI letter buttons
-    // store the letters that we have words for, using lang code as the key
-    // eg {'ENG': ['a',j'], 'KY': ['a','b']}
-    // 
-    this.languagesSub = this.languageService.languages$.subscribe((languages) => {
-      for (let language of languages) {
-        if (typeof(this.lettersLoaded[language.code])=="undefined") this.lettersLoaded[language.code] = []
+  async syncCheck() {
+    try {
+      let LocalDatabaseVersion = await this.getLocalDatabaseVersion()
+      this.syncDatabases(LocalDatabaseVersion)
+    } catch(err) {
+      if (this.connectivityService.isOnline()) {
+        this.downloadAll()
+      } else {
+        this.notifyNoConnection()
       }
-    })
+    }
+  }
 
-    // Publish letter arrays when language changes
-    this.languageService.languageCode$.subscribe( (languageCode) => {
-      this._lettersLoaded$.next(this.lettersLoaded[languageCode])
-    })
+  async syncDatabases(LocalDatabaseVersion) {
+    try {
+      let RemoteDatabaseVersion = await this.getRemoteDatabaseVersion()
+      if (this.connectivityService.isOnline()) {
 
-    //  TEMPORARILY
-    this.getEntriesForLetter(['a','b','c'])
+          // for testing
+          // LocalDatabaseVersion = "0.0.0"
 
-    // if (this.connectivityService.isOnline()) {
-    //   // online
-    //   // 1a Compare db versions
-    //   this.databaseService.getFromPouch("dbVersion")
-    //     .then((pdbVersion) => {
-    //       this.databaseService.getFromFirebase("dbVersion")
-    //         .then((fdbVersion) => {
-    //           if (fdbVersion !== pdbVersion) {
-    //             // 1b Different db versions, download all data
-    //             this.downloadAll()
-    //           } else {
-    //             // 1c Matching db versions, use local data
-    //             this.loadAll()
-    //           }
-    //         })
-    //         .catch((err) => {
-    //           console.log("couldn't get db version from firebase")
-    //           this.loadAll()
-    //         })
-    //     })
-    //     .catch((err) => {
-    //       console.log("no local dbversion, download all")
-    //       this.downloadAll()
-    //     })
-    // } else {
-    //   // offline
-    //   this.loadAll()
-    // }
-    
+          if (LocalDatabaseVersion==RemoteDatabaseVersion) {            
+            this.loadAll()
+          } else {
+            this.downloadAll()
+          }
+      } else {
+        this.notifyNoConnection()
+        this.loadAll()
+      }
+    } catch(err) {
+       console.log(err)
+    }
+  }
+
+
+  async getLocalDatabaseVersion() {
+    try {
+      let config = await this.databaseService.getConfig("dbVersion")
+      return config
+    } catch (err) {
+      console.log("local db version is missing")
+    }
+  }
+
+
+  async getRemoteDatabaseVersion() {
+    return this.databaseService.getFromFirebase("dbVersion")
+  }
+
+
+  async downloadAll() {
+    this.databaseService.getFromFirebase("dbVersion")
+      .then((dbVersion) => {
+        // save dbVersion to pouch for next time
+        let doc = {"_id": "dbVersion", "data":dbVersion}
+        this.databaseService.insertOrUpdateConfig(doc)
+      })
+    this.databaseService.getFromFirebase("letters")
+      .then((letters) => {
+        // save letters to pouch for next time
+        let doc = {"_id": "letters", "data":letters}
+        this.databaseService.insertOrUpdateConfig(doc)
+        // reset the index
+        this.entryService.initIndex()
+        // get the entries
+        this.downloadEntriesForLetter(letters)
+      })  
+    return true
+  }
+
+
+  async loadAll() {
+    console.log("load all happens from home.ts")
+    return true
+  }
+
+
+  notifyNoConnection() {
+    console.log("Can't update, please check connection.")
   }
 
 
   // . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-  // loadAll() {
-  //   console.log("SS loadAll")
-  //   // 2a get letters from pouch
-  //   this.databaseService.getFromPouch("letters")
-  //     .then((letters) => {
-  //       // 2b get get entries from pouch
-  //       this.databaseService.getFromPouch("entries")
-  //         .then((entries) => {
-  //           this.showLettersLoaded(entries)
-  //           this.entryService.replaceEntries(entries)
-  //       })
-  //     })
-  //     .catch((err) => {
-  //       // 3a do we have a connection ?
-  //       if (this.connectivityService.isOnline()) {
-  //         // 3b try to download letters, then entries
-  //         this.downloadAll()
-  //       } else {
-  //         // no connection. can't download
-  //         let msg = "no letters, no connection, can't download the words"
-  //         console.log(msg)
-  //       }
-  //     })
-  // }
-
-  // downloadAll() {
-  //   console.log("downloadAll")
-
-  //   this.databaseService.getFromFirebase("dbVersion")
-  //     .then((dbVersion) => {
-  //       console.log('retrieved dbVersion from firebase', dbVersion)
-  //       // save dbVersion to pouch for next time
-  //       let doc = {"_id": "dbVersion", "dbVersion":dbVersion}
-  //       this.databaseService.insertOrUpdate(doc)
-  //     })
-
-  //   this.databaseService.getFromFirebase("letters")
-  //     .then((letters) => {
-  //       // save letters to pouch for next time
-  //       let doc = {"_id": "letters", "letters":letters}
-  //       this.databaseService.insertOrUpdate(doc)
-  //       this.getEntriesForLetter(letters)
-  //   //   })
-  // }
-
-  // . . . . . . . . . . . . . . . . . . . . . . . . . . .
-
-  getEntriesForLetter(letters) {
-
+  downloadEntriesForLetter(letters) {
     letters.map( (letter) => {
-      this.lettersLoadingAdd(letter)
-
       this.databaseService.queryFirebase('entries', 'initial', letter)
       .then(async (entries:any) => {
-
         if (entries) {
+          this.lettersLoadingAdd(letter)
           // convert firebase object to array so we can iterate 
           let i=0, entriesArr=[]
           for (var ob in entries) {
-            let tmpEntry = entries[ob]
             // keep the id
+            let tmpEntry = entries[ob]
             tmpEntry["id"] = ob
             entriesArr[i++] = tmpEntry
           }
@@ -189,74 +132,29 @@ online?
             this.entryService.saveEntry(doc)
             this.entryService.addEntryToIndex(entry)
             if (entry.assets) await this.attachmentService.saveAttachments(entry)
-
           })
           await Promise.all(promises)
-          .then(()=>{
-            this.entryService.saveIndex()
-            this.updateLetterUI(entriesArr)
-          })
+          .then(()=>this.entryService.saveIndex())
           .catch((err)=>console.log(err))
+          this.lettersLoadingRemove(letter)
         }
-        // update the loading UI - what is left to download?
-        this.lettersLoadingDelete(letter)
       })
     })
   }
 
-  async updateLetterUI(entries) {
-    for (let lang in this.lettersLoaded){
-      for (let i in entries) {
-        let letter = this.getLetter(lang, entries[i])
-        if (this.lettersLoaded[lang].indexOf(letter) == -1) {
-          this.lettersLoaded[lang].push(letter)
-        }
-      }
-      this.lettersLoaded[lang].sort()
-    }
+  get lettersLoading$() {
+    return this._lettersLoading$.asObservable()
   }
-
-  getLetter(lang, entry) {
-    if (lang=='ENG') {
-      let word = this.entryService.flattenSenses(entry)
-      return this.entryService.getInitial(word) 
-    } else {
-      return entry.initial.toLowerCase()
-    }
-
-  }
-
-
   lettersLoadingAdd(letter) {
     this.lettersLoading.push(letter)
     this._lettersLoading$.next(this.lettersLoading)
   }
-
-  lettersLoadingDelete(letter) {
+  lettersLoadingRemove(letter) {
     if (this.lettersLoading.length > 0) {
       let index = this.lettersLoading.indexOf(letter)
       if (index > -1) this.lettersLoading.splice(index, 1)
       this._lettersLoading$.next(this.lettersLoading)
-      // check again. if there are no letters left, we're done
     }
   }
-
-  // showLettersLoaded(entries) {
-  //   // 2c work out the letters to show
-  //   for (let lang in this.lettersLoaded){
-  //     for (let key in entries) {
-        
-  //       // for <LANG> we can use entry.initial
-  //       // but for <ENG> we need to get data from the ge/def - so use the entry service's flatten helper
-  //       let entry = entries[key]
-  //       let flattenedSenses = this.entryService.flattenSenses(entry)
-  //       let char = (lang=='ENG') ? this.entryService.getInitial(flattenedSenses) : entry.initial.toLowerCase()
-
-  //       if (this.lettersLoaded[lang].indexOf(char) == -1 ) this.lettersLoaded[lang].push(char)
-
-  //       this.lettersLoaded[lang].sort()
-  //     }
-  //   }
-  // }
 
 }

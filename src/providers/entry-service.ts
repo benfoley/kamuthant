@@ -11,9 +11,10 @@ export class EntryService {
   // Use entriesAll as a memory cache of all the entries,
   // Then the observable (entries$) can be the entries for the current state
   entriesAll: any = {}
-  entriesIndex: any = []
+  entriesIndex: any
   // Subscribe to this for current filtered entry list
   _entries$: BehaviorSubject<any> = new BehaviorSubject({})
+  _entriesIndex$: BehaviorSubject<any> = new BehaviorSubject({})
 
   // The currently selected language
   languageCode: any
@@ -22,12 +23,15 @@ export class EntryService {
     public databaseService: DatabaseService,
     public languageService: LanguageService
   ) {
-    this.languageService.languageCode$.subscribe((language) => this.languageCode = language)
-    if (this.entriesIndex.length == 0) this.initIndex()
+    this.languageService.languageCode$.subscribe((code) => this.languageCode = code)
+    this.getIndex()
   }
 
   get entries$() {
     return this._entries$.asObservable()
+  }
+  get entriesIndex$() {
+    return this._entriesIndex$.asObservable()
   }
 
   search(term) {
@@ -91,10 +95,20 @@ export class EntryService {
       this.entriesIndex[language.code] = {}
     }
   }
+  async getIndex(){
+    console.log("get entries index")
+    try {
+      this.entriesIndex = await this.databaseService.getConfig("index")
+      this._entriesIndex$.next(this.entriesIndex)
+      return this.entriesIndex.data
+    } catch(err) {
+      console.log("couldn't get index")
+    }
+  }
 
   addEntryToIndex(entry) {
     return new Promise((resolve) => {
-      let lang, char, word
+      let char, word
       for (let lang in this.entriesIndex) {
         if (lang=='ENG') {
           let flattened = this.flattenSenses(entry)
@@ -117,8 +131,10 @@ export class EntryService {
     return new Promise((resolve) => {
       // update our handy index list
       let index = {"_id": "index", "data": this.entriesIndex}
+      // broadcast it
+      this._entriesIndex$.next( this.entriesIndex )
       // persist it
-      this.databaseService.insertOrUpdateIndex(index)
+      this.databaseService.insertOrUpdateConfig(index)
         .then((res)=>{
           resolve()
         })
@@ -150,12 +166,11 @@ export class EntryService {
   }
 
   async getEntriesByLetter(letter) {
-    // get the index from the db
-    let index = await this.databaseService.getIndex()
-    let items = index.rows[0].doc.data[this.languageCode][letter]
+    if (typeof(this.entriesIndex)=="undefined") await this.getIndex()
+    // get the real entry for each item in the index
+    let items = this.entriesIndex[this.languageCode][letter]
     let arr = []
     if (items) {
-      // get the real entry for this id
       await Promise.all( items.map( async (item) => {
         await this.databaseService.getFromPouch(item.id).then((res:any)=>{
           if (res) {

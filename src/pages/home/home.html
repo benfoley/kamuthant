@@ -15,20 +15,23 @@
     <button ion-button outline (click)="gotoSearch()">Search</button>
   </ion-card>
 
-
-
-
   <ion-card padding class="alphabet">
-    <button
-      ion-button
-      *ngFor="let letter of lettersLoaded$ | async | values"
-      (click)="gotoWordlist(letter)">
+  
+    <button ion-button *ngFor="let letter of letters" (click)="gotoWordlist(letter)">
       {{letter}}
     </button>
+
   </ion-card>
 
+<ion-card *ngIf="(lettersLoading$ | async)?.length > 0">
+  Downloading 
+  <span *ngFor="let letter of lettersLoading$ | async">
+    {{letter}}
+  </span>
+</ion-card>
 
 
+<!-- 
   <ion-card padding *ngIf="isLoading">
     <div class="loading-container small inline">
       <div class="loading spin"></div>
@@ -41,9 +44,9 @@
     </div>
   </ion-card>
 
+ -->
 
-
-  <ion-card padding class="meta">
+  <ion-card padding class="meta" *ngIf="isMobile">
     <p>{{status$ | async}}</p>
   </ion-card>
 

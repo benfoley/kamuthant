@@ -21,6 +21,7 @@ export class ConnectivityService {
   }
 
   isOnline(): boolean {
+    // return false
     return navigator.onLine
   }
 
@@ -31,14 +32,17 @@ export class ConnectivityService {
   reportConnection() {
     if (navigator.onLine) {
       if ('connection' in navigator) {
-        this.onlineSubject.next(navigator.connection.type)
+        console.log("online", navigator)
+        if (navigator.connection.effectiveType) this.onlineSubject.next("online "+navigator.connection.effectiveType)
+        else if (navigator.connection.type) this.onlineSubject.next(navigator.connection.type)
+        else this.onlineSubject.next("online")
       } else {
         console.log("now online")
-        this.onlineSubject.next('online')
+        this.onlineSubject.next("online")
       }
     } else {
       console.log("now offline !!")
-      this.onlineSubject.next('offline')
+      this.onlineSubject.next("offline")
     }
   }
 

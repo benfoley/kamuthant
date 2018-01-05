@@ -12,8 +12,8 @@ import PouchDB from 'pouchdb'
 export class DatabaseService {
 
   entriesKey: string = "entries"
+  cdb: any
   pdb: any
-  pdbi: any
   appOnline: boolean
   _dbVersion$: BehaviorSubject<any> = new BehaviorSubject(null)
 
@@ -22,8 +22,8 @@ export class DatabaseService {
     ) {
 
     // create or open the db
+    this.cdb  = new PouchDB('Config', {auto_compaction: true})
     this.pdb  = new PouchDB('Dictionary', {auto_compaction: false})
-    this.pdbi = new PouchDB('Index', {auto_compaction: true})
 
     connectivityService.status.subscribe((status) => {
       this.appOnline = (status !== 'offline')
@@ -47,25 +47,24 @@ export class DatabaseService {
   // POUCH - - - - - - - - - - - - - - - -
 
 
-  async getIndex(){
+
+  async getConfig(key) {
     try {
-      return await this.pdbi.allDocs({
-        include_docs: true,
-        attachments: true
-      })
+      let doc = await this.cdb.get(key, {include_docs: true})
+      return doc.data
     } catch (err) {
-      console.log(err)
+      throw new Error(err)
     }
   }
 
-  async insertOrUpdateIndex(doc) {
+  async insertOrUpdateConfig(doc) {
+    // does this record exist? if so, use the rev id to update
     try {
-      // does this record exist? if so, use the rev id to update
-      let _doc = await this.pdbi.get(doc._id, {include_docs: true})
+      let _doc = await this.cdb.get(doc._id, {include_docs: true})
       doc._rev = _doc._rev
-      return await this.pdbi.put(doc)
+      return await this.cdb.put(doc)
     } catch(err) {
-      return await this.pdbi.put(doc)
+      return await this.cdb.put(doc)
     }
   }
 
@@ -75,7 +74,7 @@ export class DatabaseService {
       let doc = await this.pdb.get(key, {include_docs: true})
       return doc.data
     } catch (err) {
-      console.log(err);
+      console.log(err)
     }
   }
 
@@ -102,7 +101,6 @@ export class DatabaseService {
     try {
       let _doc = await this.pdb.get(doc._id, {include_docs: true})
       doc._rev = _doc._rev
-      console.log("insertOrUpdate")
       return await this.pdb.put(doc)
     } catch(err) {
       return await this.pdb.put(doc)
