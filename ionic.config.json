@@ -1,6 +1,6 @@
 {
   "name": "kamuthant",
-  "app_id": "",
+  "app_id": "com.kamuthant.vanilla",
   "type": "ionic-angular",
   "integrations": {
     "cordova": {}
