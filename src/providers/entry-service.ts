@@ -105,6 +105,26 @@ export class EntryService {
     }
   }
 
+  async getAdjacentIdsInIndex(lang, char, currentIndex){
+    console.log("getNextIdInIndex",lang, char, currentIndex)
+    if (typeof(this.entriesIndex)=="undefined") await this.getIndex()
+    let index = this.entriesIndex[lang][char]
+    let i = 0
+    for (let obj of index) {
+      if (obj.id != currentIndex) {
+        // nothing
+      } else {
+        console.log("match", i, obj.word, currentIndex)
+        let prev, next
+        prev = (i>0) ? index[i-1] : false
+        next = (i < index.length) ? index[i+1] : false
+        // object keys match animation keywords for ui laziness
+        return {back:prev, forward:next}
+      }
+      ++i
+    }
+  }
+
   addEntryToIndex(entry) {
     return new Promise((resolve) => {
       let char, word
@@ -182,7 +202,6 @@ export class EntryService {
 
   async groupAttachments(attachments) {
     let audios = [], images = []
-
     for (let i in attachments) {
       let att = attachments[i]
       if (att.content_type=="audio/wav") {
@@ -192,7 +211,6 @@ export class EntryService {
         images.push(this.blobToUrl(att.data))
       }
     }
-    console.log("done groupAttachments")
     return {audios:audios, images:images}
   }
 

@@ -31,6 +31,7 @@ export class Entry {
   nextId: any
   index: number
   search: boolean = false
+  adjacentIds: any
 
   constructor(
     public navCtrl: NavController,
@@ -40,28 +41,28 @@ export class Entry {
     public databaseService: DatabaseService,
     public cd: ChangeDetectorRef
     ) {
+    this.adjacentIds = {back: false, forward: false}
   }
 
   async ngOnInit() {
-    console.log("ngOnInit")
     this.id = this.navParams.data.id
+
+
+
 
     // get the entry
     // 
 
     let res = await this.entryService.getEntry(this.id)
-    console.log("after get entry")
     this.content = res.data
     let attachments = await this.entryService.groupAttachments(res._attachments)
     console.log(attachments)
     this.audios = attachments.audios
     this.images = attachments.images
-    this.prepareAudio()    
+    this.prepareAudio()
+    this.getAdjacentIds()
 
-
-    // this.nextId = this.navParams.data.nextId
     // this.search = this.navParams.data.search
-    
     // if (! this.search) {
     //   this.entryService.entriesIndex$.subscribe( (data) => this.entriesIndex = data )
     // }
@@ -71,9 +72,7 @@ export class Entry {
   }
 
   prepareAudio() {
-    console.log("prepareAudio")
     if (this.audios.length > 0){
-      console.log("have audio")
       let blob = this.audios[0].data
       this.wavesurfer = WaveSurfer.create({
         container: '#waveform',
@@ -87,7 +86,19 @@ export class Entry {
       fileReader.readAsArrayBuffer(blob);
     }    
   }
-
+  async getAdjacentIds() {
+    console.log("get adjacent ids")
+    // discover what our selected letter is!
+    let lang = this.languageService.getSelectedLanguage()
+    let char
+    if (lang.code=='ENG') {
+      char = this.entryService.getInitial( this.entryService.flattenSenses(this.content) ) 
+    } else {
+      char = this.entryService.getInitial( this.content.lx )
+    }
+    this.adjacentIds = await this.entryService.getAdjacentIdsInIndex(lang.code, char, this.id)
+    console.log(this.adjacentIds)
+  }
 
   ionViewDidEnter() {
     // Reduce the nav stack so back returns to the wordlist
@@ -115,20 +126,14 @@ export class Entry {
     this.goToEntry("forward")
   }
 
-  goToEntry(direction) {
+  async goToEntry(direction) {
 
-    // let entryIndex = this.entriesIndex.findIndex(x => x.key === this.entry.key)
-    // if (direction=="back") {
-    //   --entryIndex
-    // } else {
-    //   ++entryIndex
-    // }
 
-    // // get the next entry now
-    // let nextEntry = this.entryService.getEntry(nextId.key)
-    // let options = {nextId: nextId, entry: nextEntry}
-    // this.navCtrl.push('Entry', options, {animation: "ios-transition", direction: direction})
-  }
-
+    console.log("nextId", this.adjacentIds)
+    if (this.adjacentIds[direction]) {
+        let options = {id: this.adjacentIds[direction].id}
+        this.navCtrl.push('entry', options, {animation: "ios-transition", direction: direction})
+      }
+    }
 
 }

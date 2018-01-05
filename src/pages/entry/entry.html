@@ -58,15 +58,23 @@
     </section>
   </div>
 
+<ion-grid>
+  <ion-row id="page-nav">
 
-  <!-- 
-  <div id="page-nav" *ngIf="! search">
-    <button ion-button icon-only clear color="dark" (click)="prev()" *ngIf="index>0">
+  <ion-col>
+    <button ion-button icon-only clear color="dark" (click)="prev()" *ngIf="adjacentIds.back">
       <ion-icon name="arrow-dropleft-circle"></ion-icon>
     </button>
-    <button ion-button icon-only clear color="dark" (click)="next()" *ngIf="index<entriesIndex.length-1">
+  </ion-col>
+  
+  <ion-col>
+    <button ion-button icon-only clear color="dark" (click)="next()" *ngIf="adjacentIds.forward">
       <ion-icon name="arrow-dropright-circle"></ion-icon>
     </button>
-  </div>
-   -->
+  </ion-col>
+
+  </ion-row>
+</ion-grid>
+
+
 </ion-content>
