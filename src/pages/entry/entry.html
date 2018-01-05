@@ -10,7 +10,7 @@
   <div #waveform id="waveform"></div>
 
   <div class="entry-container" *ngIf="content">
-    <section class="entry" (swipe)="swipeEvent($event)">
+    <section class="entry">
 
       <ion-grid>
         <ion-row>
@@ -66,7 +66,7 @@
       <ion-icon name="arrow-dropleft-circle"></ion-icon>
     </button>
   </ion-col>
-  
+
   <ion-col>
     <button ion-button icon-only clear color="dark" (click)="next()" *ngIf="adjacentIds.forward">
       <ion-icon name="arrow-dropright-circle"></ion-icon>
