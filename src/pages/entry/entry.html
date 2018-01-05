@@ -10,7 +10,7 @@
   <div #waveform id="waveform"></div>
 
   <div class="entry-container" *ngIf="content">
-    <section class="entry">
+    <section class="entry" (swipe)="swipeEvent($event)">
 
       <ion-grid>
         <ion-row>

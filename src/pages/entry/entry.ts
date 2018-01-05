@@ -95,7 +95,7 @@ export class Entry {
   ionViewDidEnter() {
     // Reduce the nav stack so back returns to the wordlist
     // Might need to change this to get swiping to work
-    if ((! this.search) && (this.navCtrl.length() > 3)) this.navCtrl.removeView(this.navCtrl.getPrevious(), {})
+    // if ((! this.search) && (this.navCtrl.length() > 3)) this.navCtrl.removeView(this.navCtrl.getPrevious(), {})
   }
 
 
@@ -103,10 +103,23 @@ export class Entry {
     this.wavesurfer.play()
   }
 
+  // Track swipes
+  swipeEvent(event) {
+    console.log("got swipe event", event.direction, event)
+    // if (this.search) return
+    if (event.direction == 2) this.next()
+    // if (event.direction == 4) this.prev()
+  }
 
-  prev() {    
-    if (this.adjacentIds.back) this.goToEntry("back")
-    else this.gotoWordlist(this.letter)
+
+  prev() {
+// empty the nav stack?
+    console.log(this.navCtrl.length())
+
+    this.navCtrl.pop()
+
+    // if (this.adjacentIds.back) this.goToEntry("back")
+    // else this.gotoWordlist(this.letter)
   }
   next() {
     if (this.adjacentIds.forward) this.goToEntry("forward")
