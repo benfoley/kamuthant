@@ -23,8 +23,7 @@ import { PipesModule } from '../pipes/pipes.module'
   ],
   imports: [
     PipesModule,
-    IonicModule.forRoot(LanguageChooser),
-    IonicModule.forRoot(WordlistEntry)
+    IonicModule
   ]
 })
 export class ComponentsModule {

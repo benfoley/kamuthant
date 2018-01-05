@@ -20,8 +20,8 @@ export class WordlistEntry implements AfterViewInit {
 
   image: any
   wavesurfer: any
-  // attachments: any = []
   audios: any = []
+  images: any = []
 
   constructor(
     public navCtrl: NavController,
@@ -38,6 +38,9 @@ export class WordlistEntry implements AfterViewInit {
       if (this.attachments[i].content_type=="audio/wav") {
         this.audios.push(this.attachments[i])
       }
+      if (this.attachments[i].content_type=="image/jpeg") {
+        this.images.push(this.attachments[i])
+      }
     }
 
   }
@@ -49,7 +52,7 @@ export class WordlistEntry implements AfterViewInit {
 
       this.wavesurfer = WaveSurfer.create({
         container: '#waveform',
-        height:100
+        height:0
       })
       // WaveSurfer with iOS Safari doesn't like loading blob, so use a buffer instead
       let fileReader = new FileReader();

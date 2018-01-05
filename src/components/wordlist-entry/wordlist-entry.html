@@ -1,22 +1,11 @@
 <ion-grid item-content *ngIf='sortKey=="lx"'>
  
   <ion-row>
-    <ion-col col-2 class="images" *ngIf="entry.assets">
-      <div
-        class="hw-image"
-        *ngIf="entry.assets.images && entry.assets.images[0].path"
-        [ngStyle]="{'background-image': 'url(' + entry.assets.images[0].path + ')'}"
-        ></div>
-    </ion-col>
-    <ion-col col-10 class="data">
-        <h1 *ngIf="entry.lxc" (click)='goToEntry(entry)'>{{entry.lxc}}</h1>
-        <h1 *ngIf="! entry.lxc" >{{entry.lx}}</h1>
-
-        <div class="entry-audio">
-          <div #waveform id="waveform"></div>
-          <button (click)="play()">play</button>
+    <ion-col class="data">
+        <div (click)='goToEntry(entry)'>
+          <h1 *ngIf="entry.lxc">{{entry.lxc}}</h1>
+          <h1 *ngIf="! entry.lxc" >{{entry.lx}}</h1>
         </div>
-
         <div *ngIf='entry.senses'>
           <ul *ngIf='entry.senses.length > 0'>
             <li *ngFor="let sense of entry.senses">
@@ -29,22 +18,20 @@
             </li>
           </ul>
         </div>
-
     </ion-col>
+    <ion-col col-2 *ngIf="this.audios.length>0">
+      <div #waveform id="waveform"></div>
+      <button ion-fab mini color="light" (click)='play()' data-tap-disabled="true">
+        <ion-icon [name]="(playing && master) ? 'pause' : 'play'"></ion-icon>
+      </button>
+    </ion-col>      
   </ion-row>
 </ion-grid>
 
 
 <ion-grid item-content *ngIf='sortKey=="def"'>
   <ion-row>
-    <ion-col col-2 class="images" *ngIf="entry.assets">
-      <div
-        class="hw-image"
-        *ngIf="entry.assets.images && entry.assets.images[0].path"
-        [ngStyle]="{'background-image': 'url(' + entry.assets.images[0].path + ')'}"
-        ></div>
-    </ion-col>
-    <ion-col col-10 class="data">
+    <ion-col col-12 class="data">
       <div *ngIf='entry.senses.length > 0'>
         <h1 *ngFor="let sense of entry.senses">
           <span *ngIf="sense"> {{sense.def}} </span>
