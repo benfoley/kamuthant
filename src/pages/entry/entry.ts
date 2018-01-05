@@ -56,7 +56,6 @@ export class Entry {
 
     // get attachments
     let attachments = await this.entryService.groupAttachments(res._attachments)
-    console.log(attachments)
     this.audios = attachments.audios
     this.images = attachments.images
 
@@ -119,11 +118,11 @@ export class Entry {
   // forward button or swipe
   next() {
     if (this.adjacentIds.forward) this.goToEntry("forward")
-    else this.gotoWordlist(this.letter)
+    else this.gotoWordlist()
   }
 
-  gotoWordlist(letter) {
-    this.navCtrl.push('words', {letter:letter})
+  gotoWordlist() {
+    this.navCtrl.push('words', {letter:this.letter})
   }
   
   goToEntry(direction) {

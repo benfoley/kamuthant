@@ -27,12 +27,9 @@ export class WordlistEntry {
     ) {
   }
 
-  async ngOnChanges() {
-    console.log("WordlistEntry ngAfterViewInit")
-      
+  async ngOnChanges() {      
     this.content = this.entry.data
     let attachments = await this.entryService.groupAttachments(this.entry._attachments)
-    console.log(attachments)
     this.audios = attachments.audios
     this.images = attachments.images
     this.prepareAudio()
@@ -55,7 +52,6 @@ export class WordlistEntry {
   }
 
   play() {
-    console.log("playing")
     this.wavesurfer.play()
   }
 

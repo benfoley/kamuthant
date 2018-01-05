@@ -6,8 +6,15 @@ wordlist-entry {
     padding-right:0;
   }
 
+
   .hw-image {
     height: 50px;
     width: 50px;
+  }
+
+  ul { padding-left: 0 }
+  li {
+    list-style-type: none;
+    padding-bottom: 5px;
   }
 }

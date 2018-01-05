@@ -1,6 +1,12 @@
 <ion-header>
 
-  <ion-navbar>
+  <ion-navbar hideBackButton>
+    <ion-buttons left>
+      <button ion-button icon-only (click)="gotoHome()">
+        <ion-icon name="arrow-back"></ion-icon>
+        Home
+      </button>
+    </ion-buttons>
     <language-chooser></language-chooser>
   </ion-navbar>
 

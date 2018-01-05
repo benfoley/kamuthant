@@ -1,9 +1,25 @@
 page-wordlist {
-  
+
+  ion-content,
+  .scroll-content { 
+    padding:0 !important;
+  }
+
   .wordlist { 
+    background-color: lime;
     opacity: 0;
 
+    ion-item,
     .item-md { padding-left:0 }
-    .item-md.item-block .item-inner { padding-right:0 }
+
+    .item-inner,
+    .item-md.item-block .item-inner { padding-right:0 !important }
+  }
+
+  .center { 
+    text-align: center;
+    width: 100%;
+    padding: 20px;
+    font-size: 1.7rem;
   }
 }

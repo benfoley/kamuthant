@@ -106,7 +106,6 @@ export class EntryService {
   }
 
   async getAdjacentIdsInIndex(lang, char, currentIndex){
-    console.log("getNextIdInIndex",lang, char, currentIndex)
     if (typeof(this.entriesIndex)=="undefined") await this.getIndex()
     let index = this.entriesIndex[lang][char]
     let i = 0
@@ -114,7 +113,6 @@ export class EntryService {
       if (obj.id != currentIndex) {
         // nothing
       } else {
-        console.log("match", i, obj.word, currentIndex)
         let prev, next
         prev = (i>0) ? index[i-1] : false
         next = (i < index.length) ? index[i+1] : false

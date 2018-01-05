@@ -19,8 +19,8 @@ import { trigger, state, style, animate, transition } from '@angular/animations'
     trigger('visibilityChanged', [
       state('visible', style({ opacity: 1 })),
       state('hidden', style({ opacity: 0 })),
-    transition('visible => hidden', animate('0ms')),
-    transition('hidden => visible', animate('100ms ease-out'))
+      transition('visible => hidden', animate('0ms')),
+      transition('hidden => visible', animate('100ms ease-out'))
     ])
   ]
 
@@ -47,7 +47,6 @@ export class Wordlist {
     public languageService: LanguageService,
     private cd: ChangeDetectorRef
     ) {
-
   }
 
   ngOnInit() {
@@ -56,7 +55,6 @@ export class Wordlist {
     this.letter = this.navParams.data.letter
 
     this.entrySub = this.entryService.entries$.subscribe((entries) => {
-      console.log("wordlist entries", entries.length, entries)
       this.entries = entries
     })
     
@@ -72,7 +70,7 @@ export class Wordlist {
       setTimeout(() => {
         this.visibility = "visible"  
         this.noEntries = (this.entries.length===0) ? true : false
-      }, 500)
+      }, 120)
     })
 
   }
@@ -82,5 +80,7 @@ export class Wordlist {
     this.langSub.unsubscribe()
   }
 
-
+  gotoHome() {
+    this.navCtrl.setRoot('Home')
+  }
 }

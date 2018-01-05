@@ -2,11 +2,11 @@
   <ion-row>
 
 
-    <ion-col class="data" *ngIf='sortKey=="lx"'>
-      <div (click)='goToEntry(content)'>
-        <h1 *ngIf="content.lxc">{{content.lxc}}</h1>
-        <h1 *ngIf="! content.lxc" >{{content.lx}}</h1>
-      </div>
+    <ion-col class="data" *ngIf='sortKey=="lx"' (click)='goToEntry(content)'>
+
+      <h1 *ngIf="content.lxc">{{content.lxc}}</h1>
+      <h1 *ngIf="! content.lxc" >{{content.lx}}</h1>
+
       <div *ngIf='content.senses'>
         <ul *ngIf='content.senses.length > 0'>
           <li *ngFor="let sense of content.senses">
@@ -19,25 +19,30 @@
           </li>
         </ul>
       </div>
+
     </ion-col>
 
-    <ion-col class="data" *ngIf='sortKey=="def"'>
-      <div (click)='goToEntry(content)'>
+    <ion-col class="data" *ngIf='sortKey=="def"' (click)='goToEntry(content)'>
+
+      <div *ngIf='content.senses'>
         <div *ngIf='content.senses.length > 0'>
           <h1 *ngFor="let sense of content.senses">
             <span *ngIf="sense"> {{sense.def}} </span>
           </h1>
         </div>
+
          <div *ngIf='(! content.senses.length) && (content.senses.def)'>
           <h1>
             <span *ngIf="content.senses.def"> {{content.senses.def}} </span>
           </h1>
         </div>
       </div>
+
       <ul>
         <li *ngIf="content.lxc">{{ content.lxc }}</li>
         <li *ngIf="! content.lxc">{{ content.lx }}</li>
       </ul>
+
     </ion-col>
 
 
