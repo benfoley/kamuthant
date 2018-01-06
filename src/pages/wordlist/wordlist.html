@@ -15,12 +15,9 @@
 
 <ion-content padding>
 
-  <h1>WORDLIST</h1>
-  
   <div *ngIf="noEntries">
     <p class="center">No entries for {{ letter }}</p>
   </div>
-
 
   <ion-list
     [@visibilityChanged]="visibility"
