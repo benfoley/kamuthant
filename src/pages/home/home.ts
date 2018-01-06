@@ -84,11 +84,11 @@ export class Home {
   }
 
   gotoAbout() {
-    this.navCtrl.push('About')
+    this.navCtrl.push('about')
   }
 
   gotoSearch() {
-    this.navCtrl.push('Search')
+    this.navCtrl.push('search', {searchTerm:''})
   }
 
   gotoWordlist(letter) {

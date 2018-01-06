@@ -2,10 +2,19 @@
 
   <ion-navbar hideBackButton>
     <ion-buttons left>
-      <button ion-button icon-only (click)="gotoWordlist()">
+
+
+      <button ion-button icon-only (click)="gotoWordlist()" *ngIf="!searchTerm">
         <ion-icon name="arrow-back"></ion-icon>
         Wordlist
       </button>
+
+      <button ion-button icon-only (click)="gotoSearch()" *ngIf="searchTerm">
+        <ion-icon name="arrow-back"></ion-icon>
+        Search
+      </button>
+
+
     </ion-buttons>
   </ion-navbar>
 
@@ -66,7 +75,7 @@
 </ion-content>
 
 
-  <ion-footer id="page-nav">
+  <ion-footer id="page-nav" *ngIf="!searchTerm">
     <ion-grid>
       <ion-row>
         <ion-col>

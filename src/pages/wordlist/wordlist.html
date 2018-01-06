@@ -15,21 +15,12 @@
 
 <ion-content padding>
 
+  <h1>WORDLIST</h1>
+  
   <div *ngIf="noEntries">
     <p class="center">No entries for {{ letter }}</p>
   </div>
-<!-- 
 
-  <ion-list>
-    <ion-item *ngFor="let entry of entries">
-      <wordlist-entry item-content [sortKey]='language.sortKey' [entry]='entry' (click)='goToEntry(entry)'></wordlist-entry> 
-    </ion-item>
-  </ion-list>
--->
-
-  <!-- VIRTUAL LIST IS ONLY LOADING THE FIRST ITEM. GRRR -->
-  
-  <!-- {{ entries | json }} -->
 
   <ion-list
     [@visibilityChanged]="visibility"
@@ -40,7 +31,6 @@
 
     <ion-item
       *virtualItem='let entry'>
-      <!-- {{entry| json}} -->
 
       <wordlist-entry 
         item-content 
@@ -49,8 +39,6 @@
         ></wordlist-entry>
 
     </ion-item>
-
   </ion-list>
-
 
 </ion-content>

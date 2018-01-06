@@ -36,6 +36,7 @@ export class Entry {
 
   lang: any
   letter: any
+  searchTerm: string
 
   constructor(
     public navCtrl: NavController,
@@ -47,7 +48,9 @@ export class Entry {
 
     ) {
     this.id = this.navParams.data.id
+    this.searchTerm = this.navParams.data.searchTerm
     this.adjacentIds = {back: false, forward: false}
+    console.log("ENTRY this.searchTerm", this.searchTerm)
   }
 
   async ngOnInit() {
@@ -111,6 +114,7 @@ this.navCtrl.swipeBackEnabled=true
   }
 
   swipeEvent(event) {
+    if (this.searchTerm) return
     if (event.direction == 2) this.next()
     // let's use the built-in back swiping functionality
     if (event.direction == 4) this.prev()
@@ -133,6 +137,10 @@ this.navCtrl.swipeBackEnabled=true
     let paramOptions = {letter: this.letter}
     let animationOptions = {animate: true, direction: "back"}
     this.navCtrl.setRoot('words', paramOptions, animationOptions)
+  }
+  gotoSearch() {
+    let animationOptions = {animate: true, direction: "back"}
+    this.navCtrl.setRoot('search', {searchTerm: this.searchTerm}, animationOptions)
   }
   
   goToEntry(direction) {

@@ -1,6 +1,12 @@
 <ion-header>
 
-  <ion-navbar>
+  <ion-navbar hideBackButton>
+    <ion-buttons left>
+      <button ion-button icon-only (click)="gotoHome()">
+        <ion-icon name="arrow-back"></ion-icon>
+        Home
+      </button>
+    </ion-buttons>
     <language-chooser></language-chooser>
   </ion-navbar>
 
@@ -13,6 +19,7 @@
     #term
     (keyup)="search(term.value)"
     (ionClear)="searchClear()"
+    [(ngModel)]="searchTerm"
     ></ion-searchbar>
 
 
@@ -24,7 +31,12 @@
     <ion-item
       *virtualItem='let entry'>
 
-      <wordlist-entry item-content [sortKey]='language.sortKey' [entry]='entry' (click)='goToEntry(entry)'></wordlist-entry>
+       <wordlist-entry 
+        item-content 
+        [sortKey]='language.sortKey'
+        [entry]='entry'
+        [searchTerm]='searchTerm'
+        ></wordlist-entry>
 
     </ion-item>
   </ion-list>

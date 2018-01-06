@@ -38,6 +38,7 @@ export class EntryService {
     // nothing yet
   }
 
+
   // This munges together all the def/ge words in entry senses
   // useful for ordering and searching entries
   // outputs something like; tide.go.down.tide.be.low
@@ -187,15 +188,23 @@ export class EntryService {
     if (items) {
       await Promise.all( items.map( async (item) => {
         await this.databaseService.getFromPouch(item.id).then((res:any)=>{
-          if (res) {
-            arr.push(res)
-          }
+          if (res) arr.push(res)
         })
       }))
     }
     this._entries$.next( arr )
   }
   
+
+  async getEntriesForSearch() {
+    // fill entries subject with all entries for this language
+    // one big array!
+    // fuse can search in the objects
+    let entries = await this.databaseService.getAllEntries()
+    console.log(entries.rows)
+    let arr = entries.rows.map(res => res.doc)
+    this._entries$.next( arr )
+  }
 
 
   async groupAttachments(attachments) {

@@ -13,6 +13,7 @@ export class WordlistEntry {
 
   @Input() sortKey: any;
   @Input() entry: any;
+  @Input() searchTerm: any;
 
   @ViewChild("waveform") waveform: ElementRef
 
@@ -29,10 +30,12 @@ export class WordlistEntry {
 
   async ngOnChanges() {      
     this.content = this.entry.data
-    let attachments = await this.entryService.groupAttachments(this.entry._attachments)
-    this.audios = attachments.audios
-    this.images = attachments.images
-    this.prepareAudio()
+    if (this.entry._attachments) {
+      let attachments = await this.entryService.groupAttachments(this.entry._attachments)
+      this.audios = attachments.audios
+      this.images = attachments.images
+      this.prepareAudio()
+    }
   }
 
   prepareAudio() {
@@ -56,6 +59,6 @@ export class WordlistEntry {
   }
 
   goToEntry(entry) {
-    this.navCtrl.push('entry', {id: entry.id})
+    this.navCtrl.push('entry', {id: entry.id, searchTerm: this.searchTerm})
   }
 }

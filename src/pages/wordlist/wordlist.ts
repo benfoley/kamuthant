@@ -1,7 +1,5 @@
-import { Component, ChangeDetectorRef } from '@angular/core';
+import { Component } from '@angular/core';
 import { IonicPage, NavController, NavParams } from 'ionic-angular';
-import { Observable } from "rxjs/Observable";
-import { DatabaseService } from "../../providers/database-service"
 import { EntryService } from "../../providers/entry-service"
 import { LanguageService } from "../../providers/language-service"
 import { trigger, state, style, animate, transition } from '@angular/animations';
@@ -23,29 +21,24 @@ import { trigger, state, style, animate, transition } from '@angular/animations'
       transition('hidden => visible', animate('100ms ease-out'))
     ])
   ]
-
 })
 export class Wordlist {
 
-  isLoading: boolean = true
-  letter: string
   entries: any = []
   language: any
-  visibility: string = "hidden"
+  letter: string
 
   entrySub: any
   langSub: any
+
   noEntries: boolean
-  audios: any = []
-  images: any = []
+  visibility: string = "hidden"
 
   constructor(
     public navCtrl: NavController,
     public navParams: NavParams,
-    public databaseService: DatabaseService,
     public entryService: EntryService,
-    public languageService: LanguageService,
-    private cd: ChangeDetectorRef
+    public languageService: LanguageService
     ) {
   }
 
@@ -55,6 +48,7 @@ export class Wordlist {
     this.letter = this.navParams.data.letter
 
     this.entrySub = this.entryService.entries$.subscribe((entries) => {
+console.log("changed entries", entries)
       this.entries = entries
     })
     

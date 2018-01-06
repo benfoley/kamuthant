@@ -127,6 +127,8 @@ export class SyncService {
             entriesArr[i++] = tmpEntry
           }
           let promises = entriesArr.map( async (entry) => {
+            // make a flattened value of sense def/ges for better searching
+            entry["engSearch"] = this.entryService.flattenSenses(entry)
             let doc = {"_id":entry.id, "data":entry}
             this.entryService.saveEntry(doc)
             this.entryService.addEntryToIndex(entry)

@@ -80,10 +80,7 @@ export class DatabaseService {
 
   async getAllEntries(){
     try {
-      return await this.pdb.allDocs({
-        include_docs: true,
-        attachments: true
-      })
+      return await this.pdb.allDocs({include_docs: true, attachments: true, binary: true})
     } catch (err) {
       console.log(err)
     }
