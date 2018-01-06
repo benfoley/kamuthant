@@ -43,7 +43,9 @@ export class SyncService {
 
   async syncDatabases(LocalDatabaseVersion) {
     try {
+      console.log("getting remote db version")
       let RemoteDatabaseVersion = await this.getRemoteDatabaseVersion()
+      console.log("got remote db version", RemoteDatabaseVersion)
       if (this.connectivityService.isOnline()) {
 
           // for testing
@@ -67,6 +69,7 @@ export class SyncService {
   async getLocalDatabaseVersion() {
     try {
       let config = await this.databaseService.getConfig("dbVersion")
+      console.log("got local db version", config)
       return config
     } catch (err) {
       console.log("local db version is missing")
@@ -80,14 +83,17 @@ export class SyncService {
 
 
   async downloadAll() {
+    console.log("download all")
     this.databaseService.getFromFirebase("dbVersion")
       .then((dbVersion) => {
+        console.log("save db version")
         // save dbVersion to pouch for next time
         let doc = {"_id": "dbVersion", "data":dbVersion}
         this.databaseService.insertOrUpdateConfig(doc)
       })
     this.databaseService.getFromFirebase("letters")
       .then((letters) => {
+        console.log("get letters", letters)
         // save letters to pouch for next time
         let doc = {"_id": "letters", "data":letters}
         this.databaseService.insertOrUpdateConfig(doc)
@@ -113,9 +119,11 @@ export class SyncService {
   // . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
   downloadEntriesForLetter(letters) {
+    console.log("download entries for letters")
     letters.map( (letter) => {
       this.databaseService.queryFirebase('entries', 'initial', letter)
       .then(async (entries:any) => {
+        console.log("doing", letter)
         if (entries) {
           this.lettersLoadingAdd(letter)
           // convert firebase object to array so we can iterate 
