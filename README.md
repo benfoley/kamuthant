@@ -10,6 +10,15 @@ Clone the code, cd into it and do `npm install`
 
 ### Set up a firebase account
 
+You can use the configs provided with the project by:
+
+- creating the poject's public www dir with `ionic build`,
+- change into the functions dir and run `npm install`,
+- change back up to the project dir and,
+- then link the local project to firebase by running `firebase deploy`. 
+
+Or, build the configs by scratch by:
+
 Set permissions for firebase database read access in the firebase console `Database > Rules`
 
     {
@@ -34,6 +43,10 @@ For now, set the Storage rules to allow for public read access
     }
 
 
+
+
+Either way, do this after linking the project with firebase.
+
 Set CORS by creating a `cors.json` file with the following
 
 ```
@@ -46,18 +59,14 @@ Set CORS by creating a `cors.json` file with the following
 ]
 ```
 
-Then run this (replace the url with your bucket's url)
+then run this from the project dir (replace the url with your bucket's url)
 
     gsutil cors set cors.json gs://your-bucket-url
 
 If you want to check CORS in the browser, set a local proxy
 https://blog.ionicframework.com/handling-cors-issues-in-ionic/
 
-Link the firebase project by running
 
-    firebase init
-
-Follow the prompts. Note that you want a single-page app, and use www as the public dir.
 
 
 Copy the firebase config settings from `Overview > Add Firebase to your web app` to the `/src/assets/js/firebase-worker.js` and `/src/app/app.module.ts` We need: 
@@ -67,6 +76,21 @@ Copy the firebase config settings from `Overview > Add Firebase to your web app`
 - databaseURL
 - storageBucket
 - messagingSenderId
+
+Create two folders in the Console > Storage for `audio` and `image`
+
+Set the storage rules to allow unauth read
+
+```
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow write: if request.auth != null;
+      allow read: if request.auth == null;
+    }
+  }
+}
+```
 
 
 
