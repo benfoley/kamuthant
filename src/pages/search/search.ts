@@ -45,7 +45,11 @@ export class Search {
     if (this.navParams.data.searchTerm) {
       this.searchTerm = this.navParams.data.searchTerm
     } else {
-      this.searchTerm = await this.databaseService.getConfig("searchTerm")  
+      try {
+        this.searchTerm = await this.databaseService.getConfig("searchTerm")  
+      } catch (err) {
+        this.searchTerm = ''
+      }
     }
 
     this.searchOptions = {
