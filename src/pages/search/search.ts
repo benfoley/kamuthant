@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { IonicPage, NavController, NavParams } from 'ionic-angular';
+import { DatabaseService } from "../../providers/database-service"
 import { EntryService } from "../../providers/entry-service"
 import { LanguageService } from "../../providers/language-service"
 
@@ -34,22 +35,27 @@ export class Search {
   constructor(
     public navCtrl: NavController,
     public navParams: NavParams,
+    public databaseService: DatabaseService,
     public entryService: EntryService,
     public languageService: LanguageService
     ) {
   }
 
-  ngOnInit() {
-  this.searchTerm = this.navParams.data.searchTerm
+  async ngOnInit() {
+    if (this.navParams.data.searchTerm) {
+      this.searchTerm = this.navParams.data.searchTerm
+    } else {
+      this.searchTerm = await this.databaseService.getConfig("searchTerm")  
+    }
 
-  this.searchOptions = {
-    shouldSort: true,
-    threshold: 0.6,
-    location: 0,
-    distance: 100,
-    maxPatternLength: 32,
-    minMatchCharLength: 2,
-    keys: []}
+    this.searchOptions = {
+      shouldSort: true,
+      threshold: 0.6,
+      location: 0,
+      distance: 100,
+      maxPatternLength: 32,
+      minMatchCharLength: 2,
+      keys: []}
 
     this.entrySub = this.entryService.entries$.subscribe( async (entries) => {
       console.log("changed entries", entries)
@@ -69,6 +75,12 @@ export class Search {
 
   search(term) {
     this.searchTerm = term
+    try {
+      let index = {"_id": "searchTerm", "data": term}
+      this.databaseService.insertOrUpdateConfig(index)
+    } catch(err) {
+      console.log("couldn't save search term")
+    }
     this.doSearch()
   }
   doSearch() {
