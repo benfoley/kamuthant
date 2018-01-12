@@ -1,14 +1,16 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild, ElementRef } from '@angular/core';
 import { style, animate, transition, trigger } from '@angular/core';
-import { IonicPage, NavController, Platform } from 'ionic-angular';
+import { IonicPage, NavController, Platform, LoadingController } from 'ionic-angular';
 
 import { EntryService } from "../../providers/entry-service"
-import { ConnectivityService } from "../../providers/connectivity-service"
-// import { LanguageChooser } from "../../components/language-chooser/language-chooser.module"
+import { DatabaseService } from '../../providers/database-service'
 import { LanguageService } from '../../providers/language-service'
 import { SyncService } from '../../providers/sync-service'
-import { Observable } from "rxjs/Observable";
+import { Http, ResponseContentType } from '@angular/http'
 
+import { AttachmentService } from "../../providers/attachment-service"
+import {Observable} from 'rxjs/Observable';
+import 'rxjs/Rx';
 
 @IonicPage()
 @Component({
@@ -28,59 +30,68 @@ import { Observable } from "rxjs/Observable";
 })
 export class Home {
 
-  // isLoading: boolean = true // todo - change this to sync service observable
-  lettersLoading$: Observable<any>
-  // lettersLoaded$: Observable<any>
-  status$: Observable<any>
-  // entriesIndex$: Observable<any>
-
-
-  languageCode: string
-  entriesIndex: any
-  letters: any = []
-  entriesIndexSub: any
+  loading: any
+  lettersSub: any
+  letters: string[]
+  lettersAll: any
   languageCodeSub: any
-  isMobile: any
+  languageCode: string
+
+  logMessages: string[] = ["log"]
+  sound: any
+  blob: any
 
   constructor(
+    public http: Http,
+    public loadingCtrl: LoadingController,
     public navCtrl: NavController,
-    public connectivityService: ConnectivityService,
+    public attachmentService: AttachmentService,
+    public databaseService: DatabaseService,
     public entryService: EntryService,
     public languageService: LanguageService,
     public syncService: SyncService,
-    public platform: Platform,
   ) {
-    this.isMobile = this.platform.is('mobile') 
-    this.lettersLoading$ = this.syncService.lettersLoading$
-    this.status$ = this.connectivityService.onlineSubject
-
-    this.entriesIndexSub = this.entryService.entriesIndex$.subscribe((index) => {
-      this.entriesIndex = index
-      this.updateLetters()
+    this.loading = this.loadingCtrl.create({
+      content: 'checking data'
     })
-
     this.languageCodeSub = this.languageService.languageCode$.subscribe((code) => {
       this.languageCode = code
-      this.updateLetters()
+      this.updateLettersUi()
     })
-    // do this on pull-to-refresh too
-    this.syncService.syncCheck()
-
-  }
-
-  updateLetters() {
-    if (this.entriesIndex && this.languageCode) {
-      this.letters = []
-      for (let i in this.entriesIndex[this.languageCode] ){
-        if (this.letters.indexOf(i) === -1 ) this.letters.push(i)
-      }
-      this.letters.sort()
-    }
+    this.lettersSub = this.entryService.letters$.subscribe((letters) => {
+      this.lettersAll = letters
+      this.updateLettersUi()
+    })
   }
 
   ngOnDestroy() {
-    this.entriesIndexSub.unsubscribe()
     this.languageCodeSub.unsubscribe()
+    this.lettersSub.unsubscribe()
+  }
+
+  async ngOnInit() {
+    try {
+      await this.entryService.getLetters()
+    } catch (err) {
+      console.log('H could not get letters')
+    }
+  }
+
+  updateLettersUi() {
+    if (this.lettersAll && this.languageCode) this.letters = this.lettersAll[this.languageCode].sort()
+    else this.letters = []
+  }
+
+  async doRefresh(refresher) {
+    console.log('do refresh')
+    this.loading.present()
+    try {
+      await this.syncService.sync()
+    } catch (err) {
+      console.log('doRefresh error', err)
+    }
+    this.loading.dismiss()
+    refresher.complete()
   }
 
   gotoAbout() {

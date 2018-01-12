@@ -18,3 +18,35 @@
 ion-navbar {
   background-color: white;
 }
+.item-md h1 { 
+  font-size: 1.8rem; 
+  font-weight: bold;
+}
+ion-searchbar.searchbar {
+  background-color: #C8FFE0;
+
+  .searchbar-input {
+    font-size: 2.4rem;
+  }
+}
+ion-spinner {
+  stroke-width: 1px !important;
+  width: 80px !important;
+  height: 80px !important;
+}
+ion-spinner svg * {
+  stroke: #B1D1FE !important;
+}
+ion-spinner.small {
+  width: 37px !important;
+  height: 37px !important;
+  margin: 8px
+} 
+
+  .headword {
+    font-size: 2em;
+    font-weight: bold;
+  }
+  .def {
+    font-size: 1.4em;
+  }

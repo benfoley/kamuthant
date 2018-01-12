@@ -1,8 +1,7 @@
 <ion-header>
 
-  <ion-navbar hideBackButton>
+  <ion-navbar hideBackButton *ngIf='!searchTerm'>
     <ion-buttons left>
-
 
       <button ion-button icon-only (click)="gotoWordlist()" *ngIf="!searchTerm">
         <ion-icon name="arrow-back"></ion-icon>
@@ -14,35 +13,31 @@
         Search
       </button>
 
-
     </ion-buttons>
+  </ion-navbar>
+
+  <ion-navbar *ngIf='searchTerm'>
   </ion-navbar>
 
 </ion-header>
 
 <ion-content padding class="flex entry-page">
-    
-  <div #waveform id="waveform"></div>
 
   <div class="entry-container" *ngIf="content" (swipe)="swipeEvent($event)">
     <section class="entry">
 
-      <ion-grid>
+      <ion-grid class="header">
         <ion-row>
           <ion-col>
-            <div class="hw">
-              <h1 *ngIf="content.lxc">{{content.lxc}}</h1>
-              <h1 *ngIf="! content.lxc">{{content.lx}}</h1>
-            </div>
-
-            <div class="full-form" *ngIf="content.lxc && content.lx">
-              <p>Full form: {{content.lx}}</p>
+            <div class="headword">
+              {{content.lx}}
             </div>
           </ion-col>
 
-          <ion-col col-2 *ngIf="audios.length > 0">
-            <button ion-fab mini color="light" (click)='play()' data-tap-disabled="true">
-              <ion-icon [name]="(playing && master) ? 'pause' : 'play'"></ion-icon>
+          <ion-col col-2>
+            <ion-spinner  class="small" *ngIf="loadingAudio"></ion-spinner>
+            <button (click)='play()' ion-fab mini data-tap-disabled="true" *ngIf="blobReady">
+              <ion-icon name="volume-up"></ion-icon>
             </button>
           </ion-col>
 
@@ -75,21 +70,21 @@
 </ion-content>
 
 
-  <ion-footer id="page-nav" *ngIf="!searchTerm">
-    <ion-grid>
-      <ion-row>
-        <ion-col>
-          <button ion-button icon-only clear color="dark" (click)="prev()" *ngIf="adjacentIds.back">
-            <ion-icon name="arrow-dropleft-circle"></ion-icon>
-          </button>
-        </ion-col>
+<ion-footer id="page-nav" *ngIf="!searchTerm">
+  <ion-grid>
+    <ion-row>
+      <ion-col>
+        <button ion-button icon-only clear color="dark" (click)="prev()" *ngIf="adjacentIds.back">
+          <ion-icon name="arrow-dropleft-circle"></ion-icon>
+        </button>
+      </ion-col>
 
-        <ion-col>
-          <button ion-button icon-only clear color="dark" (click)="next()" *ngIf="adjacentIds.forward">
-            <ion-icon name="arrow-dropright-circle"></ion-icon>
-          </button>
-        </ion-col>
+      <ion-col>
+        <button ion-button icon-only clear color="dark" (click)="next()" *ngIf="adjacentIds.forward">
+          <ion-icon name="arrow-dropright-circle"></ion-icon>
+        </button>
+      </ion-col>
 
-      </ion-row>
-    </ion-grid>
-  </ion-footer>
+    </ion-row>
+  </ion-grid>
+</ion-footer>

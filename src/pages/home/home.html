@@ -8,47 +8,33 @@
 
 <ion-content padding>
 
+  <ion-refresher (ionRefresh)="doRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
 
-  <ion-card padding>
-    <header><h1>Dictionary</h1></header>
-    <button ion-button outline (click)="gotoAbout()">About this dictionary</button>
-    <button ion-button outline (click)="gotoSearch()">Search</button>
-  </ion-card>
-
-  <ion-card padding class="alphabet">
-  
-    <button ion-button *ngFor="let letter of letters" (click)="gotoWordlist(letter)">
+  <div padding class="alphabet" *ngIf='letters'>  
+    <button ion-button round large *ngFor="let letter of letters" (click)="gotoWordlist(letter)">
       {{letter}}
     </button>
+  </div>
 
-  </ion-card>
+  <div class="spinner" *ngIf="(lettersLoading$ | async)?.length > 0">
+    <ion-spinner></ion-spinner>
+  </div>
 
-<ion-card *ngIf="(lettersLoading$ | async)?.length > 0">
-  Downloading 
-  <span *ngFor="let letter of lettersLoading$ | async">
-    {{letter}}
-  </span>
-</ion-card>
-
-
-<!-- 
-  <ion-card padding *ngIf="isLoading">
-    <div class="loading-container small inline">
-      <div class="loading spin"></div>
-    </div>
-    <div>
-      Updating:
-      <span *ngFor="let letter of lettersLoading$ | async">
-        {{letter}}
-      </span>
-    </div>
-  </ion-card>
-
- -->
-
-  <ion-card padding class="meta" *ngIf="isMobile">
-    <p>{{status$ | async}}</p>
-  </ion-card>
-
+  <div *ngIf="(lettersLoading$ | async)?.length > 0">
+    Downloading 
+    <span *ngFor="let letter of lettersLoading$ | async">
+      {{letter}}
+    </span>
+  </div>
 
 </ion-content>
+
+<ion-footer>
+
+  <button ion-button outline (click)="gotoAbout()">About</button>
+  <button ion-button outline (click)="gotoSearch()">Search</button>
+  <!-- <p class="meta" *ngIf="isMobile">{{status$ | async}}</p> -->
+
+</ion-footer>

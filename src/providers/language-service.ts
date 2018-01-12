@@ -7,12 +7,13 @@ export class LanguageService {
 
   _languages$: BehaviorSubject<any> = new BehaviorSubject({})
   _language$: BehaviorSubject<any> = new BehaviorSubject({})
-  _languageCode$: BehaviorSubject<any> = new BehaviorSubject({})
+  _languageCode$: BehaviorSubject<any> = new BehaviorSubject('')
   languages: any
+  _letter$: BehaviorSubject<any> = new BehaviorSubject({})
 
   constructor() {
     this.languages = [
-      { "code":"GYD", "name": "Kayardilt", "sortKey":"lx" },
+      { "code":"LANG", "name": "Language", "sortKey":"lx" },
       { "code":"ENG", "name": "English",   "sortKey":"def" }
     ]
     this.setLanguage(this.languages[0])
@@ -26,6 +27,14 @@ export class LanguageService {
   }
   get languageCode$() {
     return this._languageCode$.asObservable()
+  }
+  get letter$() {
+    return this._letter$.asObservable()
+  }
+
+  setLetter(letter) {
+    this._letter$.next(letter)
+    console.log("set letter")
   }
 
   setLanguage(language) {

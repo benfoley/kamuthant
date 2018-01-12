@@ -7,19 +7,22 @@ import { SenseExample } from './sense-example/sense-example'
 import { WordlistEntry } from './wordlist-entry/wordlist-entry'
 
 import { PipesModule } from '../pipes/pipes.module'
+import { WordlistSenseComponent } from './wordlist-sense/wordlist-sense';
 
 @NgModule({
   declarations: [
     EntrySense,
     LanguageChooser,
     SenseExample,
-    WordlistEntry
+    WordlistEntry,
+    WordlistSenseComponent
   ],
   exports: [
     EntrySense,
     LanguageChooser,
     SenseExample,
-    WordlistEntry
+    WordlistEntry,
+    WordlistSenseComponent
   ],
   imports: [
     PipesModule,

@@ -1,12 +1,14 @@
 import { Injectable } from '@angular/core';
-import { Subject } from 'rxjs/Subject'
 import { BehaviorSubject } from 'rxjs/BehaviorSubject'
-import { Observable } from 'rxjs/Observable'
 
 import { ConnectivityService } from "./connectivity-service"
 
 import firebase from 'firebase'
 import PouchDB from 'pouchdb'
+import PouchFind from 'pouchdb-find';
+// import PouchLiveFind from 'pouchdb-live-find';
+// import * as PouchLiveQuery from 'pouchdb-live-query';
+
 
 @Injectable()
 export class DatabaseService {
@@ -21,17 +23,23 @@ export class DatabaseService {
     public connectivityService: ConnectivityService
     ) {
 
-    // create or open the db
-    this.cdb  = new PouchDB('Config', {auto_compaction: true})
-    this.pdb  = new PouchDB('Dictionary', {auto_compaction: true})
-
     connectivityService.status.subscribe((status) => {
       this.appOnline = (status !== 'offline')
     })
 
+    // this.initDB()
     this.getDbVersion()
-
   }
+
+  initDB() {
+    console.log("initDB")
+    // PouchDB.plugin(PouchFind).plugin(PouchLiveFind);
+    PouchDB.plugin(PouchFind)
+    // create or open the db
+    this.cdb  = new PouchDB('Config', {auto_compaction: true})
+    this.pdb  = new PouchDB('Dictionary', {auto_compaction: true})
+  }
+
 
   get dbVersion$() {
     return this._dbVersion$.asObservable()
@@ -44,6 +52,7 @@ export class DatabaseService {
   }
 
 
+
   // POUCH - - - - - - - - - - - - - - - -
 
 
@@ -53,7 +62,7 @@ export class DatabaseService {
       let doc = await this.cdb.get(key, {include_docs: true})
       return doc.data
     } catch (err) {
-      throw new Error(err)
+      throw err
     }
   }
 
@@ -68,6 +77,15 @@ export class DatabaseService {
     }
   }
 
+
+  async bulkDocs(docs) {
+    try {
+      return await this.pdb.bulkDocs(docs)
+    } catch (err) {
+      console.log('could not do bulk docs')
+      throw err
+    }
+  }
 
   async getFromPouch(key) {
     try {
@@ -86,6 +104,8 @@ export class DatabaseService {
     }
   }
 
+
+
   async getEntry(docId) {
     try {
       return await this.pdb.get(docId)
@@ -100,6 +120,7 @@ export class DatabaseService {
       doc._rev = _doc._rev
       return await this.pdb.put(doc)
     } catch(err) {
+      console.log('insertOrUpdate', err)
       return await this.pdb.put(doc)
     }
   }
@@ -115,6 +136,7 @@ export class DatabaseService {
   }
 
   async getAttachments(docId) {
+    // console.log("DS get attachments for", docId)
     try {
       let doc = await this.pdb.get(docId, {attachments: true, binary: true});
       return doc._attachments
@@ -144,4 +166,23 @@ export class DatabaseService {
           .catch((err) => reject(err))
     })
   }
+
+async getFirebase(id) {
+  try {
+    return await firebase.database().ref('/'+id+'/')
+      .once('value')
+      .then((snapshot) => {return(snapshot.val())})
+      .catch((err) => {throw err})
+  } catch (err) {
+    throw "couldn't get fb"
+  }
+}
+  // const personRef: firebase.database.Reference = firebase.database().ref(`/person1/`);
+  // personRef.on('value', personSnapshot => {
+  //   myPerson = personSnapshot.val();
+  // });
+
+
+
+
 }

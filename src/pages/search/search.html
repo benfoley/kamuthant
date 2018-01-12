@@ -1,44 +1,40 @@
 <ion-header>
 
-  <ion-navbar hideBackButton>
-    <ion-buttons left>
-      <button ion-button icon-only (click)="gotoHome()">
-        <ion-icon name="arrow-back"></ion-icon>
-        Home
-      </button>
-    </ion-buttons>
+  <ion-navbar>
     <language-chooser></language-chooser>
   </ion-navbar>
+
+  <ion-searchbar
+    #searchbar
+    [(ngModel)]="searchTerm"
+    (ionClear)="searchClear()"
+    [formControl]="searchControl"
+    >
+  </ion-searchbar> 
 
 </ion-header>
 
 
 <ion-content padding>
 
-  <ion-searchbar
-    #term
-    (keyup)="search(term.value)"
-    (ionClear)="searchClear()"
-    [(ngModel)]="searchTerm"
-    ></ion-searchbar>
+  <div class="spinner" *ngIf="loading">
+    <ion-spinner name="crescent"></ion-spinner>
+  </div>
 
+  <virtual-scroll 
+    #scroll 
+    [items]="searchEntries" 
+    [childHeight]="100"
+    [parentScroll]="content._elementRef.nativeElement.querySelector('.scroll-content')">
 
-  <ion-list
-    class="wordlist"
-    [virtualScroll]='searchEntries'
-    [approxItemHeight]="'50px'"
-    >
-    <ion-item
-      *virtualItem='let entry'>
+    <wordlist-entry 
+      *ngFor="let entry of scroll.viewPortItems"
+      [templateLang]='language.code' 
+      [searchTerm]='searchTerm'
+      [entry]='entry.doc'>
+      </wordlist-entry>
 
-       <wordlist-entry 
-        item-content 
-        [sortKey]='language.sortKey'
-        [entry]='entry'
-        [searchTerm]='searchTerm'
-        ></wordlist-entry>
+  </virtual-scroll>
 
-    </ion-item>
-  </ion-list>
 
 </ion-content>

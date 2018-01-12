@@ -14,28 +14,28 @@
 
 
 <ion-content padding>
-
-  <div *ngIf="noEntries">
-    <p class="center">No entries for {{ letter }}</p>
+<!-- 
+  <div class="spinner" *ngIf="visibility=='hidden'">
+    <ion-spinner name="crescent"></ion-spinner>
   </div>
+ -->
+ <div *ngIf='noEntries'>
+    <p class="center">No entries for {{letter}}</p>
+ </div>
 
-  <ion-list
+  <virtual-scroll 
+    #scroll 
+    [items]="entries" 
     [@visibilityChanged]="visibility"
-    class="wordlist"
-    [virtualScroll]='entries'
-    [approxItemHeight]="'50px'"
-    >
+    [childHeight]="100"
+    [parentScroll]="content._elementRef.nativeElement.querySelector('.scroll-content')">
 
-    <ion-item
-      *virtualItem='let entry'>
+    <wordlist-entry 
+      *ngFor="let entry of scroll.viewPortItems"
+      [templateLang]='language.code' 
+      [entry]='entry.doc'>
+      </wordlist-entry>
 
-      <wordlist-entry 
-        item-content 
-        [sortKey]='language.sortKey' 
-        [entry]='entry' 
-        ></wordlist-entry>
-
-    </ion-item>
-  </ion-list>
+  </virtual-scroll>
 
 </ion-content>

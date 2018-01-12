@@ -24,9 +24,14 @@ page-entry {
   // .entry-container { background-color: red; }
   // #page-nav { background-color: green; }
 
-  .entry-image {
-    height: 50px;
-    width: 50px;
+  .entry {
+
+    .grid.header, .header .row, .header .col { padding: 0 }
+
+    .entry-image {
+      height: 50px;
+      width: 50px;
+    }
   }
 
 }

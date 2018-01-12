@@ -1,37 +1,51 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from "rxjs/BehaviorSubject"
+import { Subject } from "rxjs/Subject"
 import { DatabaseService } from './database-service'
 import { LanguageService } from './language-service'
 
-declare var cordova: any
 
 @Injectable()
 export class EntryService {
 
   // Use entriesAll as a memory cache of all the entries,
-  // Then the observable (entries$) can be the entries for the current state
-  entriesAll: any = {}
+  entriesAll: any
   entriesIndex: any
   // Subscribe to this for current filtered entry list
-  _entries$: BehaviorSubject<any> = new BehaviorSubject([])
+  _entries$: Subject<any> = new Subject()
   _entriesIndex$: BehaviorSubject<any> = new BehaviorSubject({})
+  _searchIndex$: BehaviorSubject<any> = new BehaviorSubject({})
+
+  _letters$: Subject<any> = new Subject()
 
   // The currently selected language
   languageCode: any
+  langSub: any
+  
 
   constructor(
     public databaseService: DatabaseService,
     public languageService: LanguageService
   ) {
-    this.languageService.languageCode$.subscribe((code) => this.languageCode = code)
-    this.getIndex()
+    this.langSub = this.languageService.languageCode$.subscribe((code) => this.languageCode = code)
+    // this.getEntriesIndex()
   }
 
+  get letters$() {
+    return this._letters$.asObservable()
+  }
   get entries$() {
     return this._entries$.asObservable()
   }
   get entriesIndex$() {
     return this._entriesIndex$.asObservable()
+  }
+  get searchIndex$() {
+    return this._searchIndex$.asObservable()
+  }
+
+  ngOnDestroy() {
+    this.langSub.unsubscribe()
   }
 
   search(term) {
@@ -58,6 +72,7 @@ export class EntryService {
       if ( (typeof(def)=="object") && (def.length > 0) ) def = def[0]
       if ( (typeof(ge)=="object") && (ge.length > 0) ) ge = ge[0]
       // combine so searches can search easily on either def or ge values
+      if (ge==null) ge = ''
       word = def + ge
       // sanitise - drop hyphens
       if (word) word = word.replace(/[-]/g,"")
@@ -90,30 +105,29 @@ export class EntryService {
 
   // We use an index to assist lookup of words by letter, and for nav between entries
   // 
-  initIndex(){
+  initEntriesIndex(){
     this.entriesIndex = {}
     for (let language of this.languageService.languages) {
       this.entriesIndex[language.code] = {}
     }
   }
-  async getIndex(){
+  async getEntriesIndex(){
     try {
       this.entriesIndex = await this.databaseService.getConfig("index")
       this._entriesIndex$.next(this.entriesIndex)
       return this.entriesIndex.data
     } catch(err) {
-      console.log("couldn't get index")
+      console.log("ES couldn't get index")
     }
   }
 
-  async getAdjacentIdsInIndex(lang, char, currentIndex){
-    if (typeof(this.entriesIndex)=="undefined") await this.getIndex()
+  async getAdjacentIdsInIndex(lang, char, id){
+    if (typeof(this.entriesIndex)=="undefined") await this.getEntriesIndex()
+      console.log('this.entriesIndex', lang, char, id)
     let index = this.entriesIndex[lang][char]
     let i = 0
-    for (let obj of index) {
-      if (obj.id != currentIndex) {
-        // nothing
-      } else {
+    for (let j of index) {
+      if (j == id) {
         let prev, next
         prev = (i>0) ? index[i-1] : false
         next = (i < index.length) ? index[i+1] : false
@@ -124,29 +138,8 @@ export class EntryService {
     }
   }
 
-  addEntryToIndex(entry) {
-    return new Promise((resolve) => {
-      let char, word
-      for (let lang in this.entriesIndex) {
-        if (lang=='ENG') {
-          let flattened = this.flattenSenses(entry)
-          char = this.getInitial(flattened)
-          word = this.getFirstWord(flattened)
-        } else {
-          char = entry.initial
-          word = entry.lx
-        }
-        if (typeof(this.entriesIndex[lang][char])=="undefined") {
-          this.entriesIndex[lang][char] = []
-        }
-        this.entriesIndex[lang][char].push({id:entry.id, word:word})
-      }
-      resolve()
-    })
-  }
-
   saveIndex() {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       // update our handy index list
       let index = {"_id": "index", "data": this.entriesIndex}
       // broadcast it
@@ -156,22 +149,91 @@ export class EntryService {
         .then((res)=>{
           resolve()
         })
-        .catch((err)=> console.log("saveIndex err", err))
+        .catch((err)=> {
+          console.log("saveIndex err", err)
+          reject()
+        })
     })
   }
 
-
-  saveEntry(doc) {
-    return new Promise(resolve => {
-      // Save the entry to pouch
-      // let doc = {"_id": entry.id, "data": entry}
-      this.databaseService.insertOrUpdate(doc)
-        .then((res)=>{
-          resolve()
-        })      
-    })
+  async saveLetters() {
+    let letters = {}
+    for (let lang in this.entriesIndex) {        
+      letters[lang] = Object.keys(this.entriesIndex[lang])
+    }
+    this._letters$.next(letters)
+    try {
+      let letterDoc = {"_id": "letters", "data": letters}
+      return await this.databaseService.insertOrUpdateConfig(letterDoc)
+    } catch (err) {
+      throw err
+    }
   }
-  
+
+  async getLetters() {
+    console.log("getLetters")
+    try {
+      let letters = await this.databaseService.getConfig("letters")
+      this._letters$.next(letters)
+      return letters
+    } catch (err) {
+      throw err
+    }
+  }
+
+  async saveEntries(entries) {
+    let docs = []
+    await this.initEntriesIndex()
+    for (let i in entries) {
+      let entry = entries[i]
+      entry.id = i
+      entry.engSearch = this.flattenSenses(entry)
+      entry.engInitial = this.getInitial(entry.engSearch)
+      let doc = {"_id": entry.id, "data": entry}
+      docs.push(doc)
+      let char
+      for (let lang in this.entriesIndex) {
+        if (lang=='ENG') {
+          char = entry.engInitial
+        } else {
+          char = entry.initial
+        }
+        // create letter array
+        if (typeof(this.entriesIndex[lang][char])=="undefined") {
+          this.entriesIndex[lang][char] = []
+        }
+        // add the entry
+        this.entriesIndex[lang][char].push(entry.id)
+      }
+    }
+    try {
+      await this.saveIndex()
+    } catch (err) {
+      throw err
+    }
+    try {
+      await this.saveLetters()
+    } catch (err) {
+      console.log('error doing saveLetters',)
+      throw err
+    }
+    try {
+      return await this.databaseService.bulkDocs(docs)
+    } catch (err) {
+      throw err
+    }
+  }
+
+  async saveEntry(doc) {
+    try {
+      return await this.databaseService.insertOrUpdate(doc)
+    } catch (err) {
+      console.log("save entry error", err)
+      throw err
+    }
+  }
+
+
   async getEntry(id) {
     try {
       return await this.databaseService.getFromPouch(id)
@@ -180,38 +242,58 @@ export class EntryService {
     }
   }
 
-  async getEntriesByLetter(letter) {
-    if (typeof(this.entriesIndex)=="undefined") await this.getIndex()
-    // get the real entry for each item in the index
-    let items = this.entriesIndex[this.languageCode][letter]
+
+  async getEntriesForLetter(letter) {
+    if (typeof(this.entriesIndex)=="undefined") await this.getEntriesIndex()
+    // get the ids of entries in this index
+    let ids = this.entriesIndex[this.languageCode][letter]
+    console.log(ids)
+    if (ids) {
+      let res = await this.databaseService.pdb.allDocs({
+        keys: ids,
+        include_docs: true,
+        attachments: true,
+        binary: true
+      })
+      this._entries$.next(res.rows)
+    } else {
+      this._entries$.next([])
+    }
+  }
+
+
+  // need to add the eng word search value to the main entriesindex
+  async getSearchIndex() {
+    if (typeof(this.entriesIndex)=="undefined") await this.getEntriesIndex()
+    let arr = []
+    for (let letter in this.entriesIndex[this.languageCode]) {
+      this.entriesIndex[this.languageCode][letter].map(item => {arr.push(item)})
+    }
+    this._searchIndex$.next(arr)
+  }  
+
+
+  async getSearchEntries(items) {
     let arr = []
     if (items) {
-      await Promise.all( items.map( async (item) => {
-        await this.databaseService.getFromPouch(item.id).then((res:any)=>{
-          if (res) arr.push(res)
-        })
-      }))
+      if (!this.entriesAll) this.entriesAll = await this.databaseService.getAllEntries()
+      arr  = this.entriesAll.rows.filter((array_el) => {
+         return items.filter((anotherOne_el) => {
+            return anotherOne_el.id == array_el.id;
+         }).length > 0
+      });
+      return arr
     }
-    this._entries$.next( arr )
-  }
-  
-
-  async getEntriesForSearch() {
-    // fill entries subject with all entries for this language
-    // one big array!
-    // fuse can search in the objects
-    let entries = await this.databaseService.getAllEntries()
-    console.log(entries.rows)
-    let arr = entries.rows.map(res => res.doc)
-    this._entries$.next( arr )
   }
 
 
   async groupAttachments(attachments) {
+    // console.log("ES groupAttachments for", id)
+    // let attachments = await this.databaseService.getAttachments(id)
     let audios = [], images = []
     for (let i in attachments) {
       let att = attachments[i]
-      if (att.content_type=="audio/wav") {
+      if ((att.content_type=="audio/mp3") || (att.content_type=="audio/wav")) {
         audios.push(att)
       }
       if (att.content_type=="image/jpeg") {
@@ -224,6 +306,9 @@ export class EntryService {
   blobToUrl(blob) {
     return URL.createObjectURL(blob)
   }
+
+
+
 
   // async getAttachment(entry, name) {
   //  return await this.databaseService.getAttachment(entry.id, name)

@@ -22,148 +22,111 @@ export class SyncService {
   ) {
   }
 
-  /*
-  get local db version
-  yes ->  compare it with remote, use local if they match, download all if remote is newer
-  no  ->  download all if there's a connection
-  */
 
-  async syncCheck() {
+
+
+  async sync() {
+    let ldbv, rdbv
+    // get local db version
+    // if this fails (should check if local entries exist), download all then bail
     try {
-      let LocalDatabaseVersion = await this.getLocalDatabaseVersion()
-      this.syncDatabases(LocalDatabaseVersion)
-    } catch(err) {
-      if (this.connectivityService.isOnline()) {
-        this.downloadAll()
-      } else {
-        this.notifyNoConnection()
+      ldbv = await this.getLocalDatabaseVersion()
+    } catch (err) {
+      console.log('SS could not get local db version', err)
+      await this.download()
+      throw err
+    }
+    // now try and get remote db version
+    // if this fails, then bail
+    try {
+      rdbv = await this.getRemoteDatabaseVersion()
+    } catch (err) {
+      console.log('SS could not get remote db version', err)
+      throw err
+    }
+    
+    // hijack the local version number to force download, for testing purposes
+    // ldbv = '0.0.0'
+    
+    console.log(JSON.stringify(ldbv), JSON.stringify(rdbv))
+
+    // if the versions match, we don't need to do anything
+    if (ldbv==rdbv) {
+      console.log('SS versions match. use local data')
+      // get letters from the db
+      await this.entryService.getLetters()
+      return true
+    } else {
+      console.log('SS versions do not match. download new data')
+      try {
+        await this.download(rdbv)
+        return true
+      } catch (err) {
+        throw err
       }
     }
   }
 
-  async syncDatabases(LocalDatabaseVersion) {
+
+  async download(rdbv?) {
+    let entries
     try {
-      console.log("getting remote db version")
-      let RemoteDatabaseVersion = await this.getRemoteDatabaseVersion()
-      console.log("got remote db version", RemoteDatabaseVersion)
-      if (this.connectivityService.isOnline()) {
-
-          // for testing
-          // LocalDatabaseVersion = "0.0.0"
-
-          if (LocalDatabaseVersion==RemoteDatabaseVersion) {            
-            this.loadAll()
-          } else {
-            this.downloadAll()
-          }
-      } else {
-        this.notifyNoConnection()
-        this.loadAll()
-      }
-    } catch(err) {
-       console.log(err)
+      entries = await this.downloadAll()
+      if (entries) {
+        // note that pouch will return even if there is revision clash
+        await this.entryService.saveEntries(entries)
+        try {
+          // save the db version
+          let version = (rdbv) ? rdbv : await this.getRemoteDatabaseVersion()
+          let doc = {"_id": "dbVersion", "data":version}
+          await this.databaseService.insertOrUpdateConfig(doc)
+        } catch (err) {
+          console.log('err', err)
+        }
+      } 
+      return entries
+    } catch (err) {
+      console.log('SS could not download all', err)
+      throw err
     }
   }
+
+
 
 
   async getLocalDatabaseVersion() {
     try {
-      let config = await this.databaseService.getConfig("dbVersion")
-      console.log("got local db version", config)
-      return config
+      return await this.databaseService.getConfig("dbVersion")
     } catch (err) {
-      console.log("local db version is missing")
+      throw err
     }
   }
 
-
   async getRemoteDatabaseVersion() {
-    return this.databaseService.getFromFirebase("dbVersion")
+    try {
+      let res = await this.databaseService.getFromFirebase("dbVersion")
+      console.log('getRemoteDatabaseVersion', res)
+      return res
+    } catch (err) {
+      throw err
+    }
   }
 
 
   async downloadAll() {
-    console.log("download all")
-    this.databaseService.getFromFirebase("dbVersion")
-      .then((dbVersion) => {
-        console.log("save db version")
-        // save dbVersion to pouch for next time
-        let doc = {"_id": "dbVersion", "data":dbVersion}
-        this.databaseService.insertOrUpdateConfig(doc)
-      })
-    this.databaseService.getFromFirebase("letters")
-      .then((letters) => {
-        console.log("get letters", letters)
-        // save letters to pouch for next time
-        let doc = {"_id": "letters", "data":letters}
-        this.databaseService.insertOrUpdateConfig(doc)
-        // reset the index
-        this.entryService.initIndex()
-        // get the entries
-        this.downloadEntriesForLetter(letters)
-      })  
-    return true
-  }
-
-
-  async loadAll() {
-    return true
-  }
-
-
-  notifyNoConnection() {
-    console.log("Can't update, please check connection.")
-  }
-
-
-  // . . . . . . . . . . . . . . . . . . . . . . . . . . .
-
-  downloadEntriesForLetter(letters) {
-    console.log("download entries for letters")
-    letters.map( (letter) => {
-      this.databaseService.queryFirebase('entries', 'initial', letter)
-      .then(async (entries:any) => {
-        console.log("doing", letter)
-        if (entries) {
-          this.lettersLoadingAdd(letter)
-          // convert firebase object to array so we can iterate 
-          let i=0, entriesArr=[]
-          for (var ob in entries) {
-            // keep the id
-            let tmpEntry = entries[ob]
-            tmpEntry["id"] = ob
-            entriesArr[i++] = tmpEntry
-          }
-          let promises = entriesArr.map( async (entry) => {
-            // make a flattened value of sense def/ges for better searching
-            entry["engSearch"] = this.entryService.flattenSenses(entry)
-            let doc = {"_id":entry.id, "data":entry}
-            this.entryService.saveEntry(doc)
-            this.entryService.addEntryToIndex(entry)
-            if (entry.assets) await this.attachmentService.saveAttachments(entry)
-          })
-          await Promise.all(promises)
-          .then(()=>this.entryService.saveIndex())
-          .catch((err)=>console.log(err))
-          this.lettersLoadingRemove(letter)
-        }
-      })
-    })
-  }
-
-  get lettersLoading$() {
-    return this._lettersLoading$.asObservable()
-  }
-  lettersLoadingAdd(letter) {
-    this.lettersLoading.push(letter)
-    this._lettersLoading$.next(this.lettersLoading)
-  }
-  lettersLoadingRemove(letter) {
-    if (this.lettersLoading.length > 0) {
-      let index = this.lettersLoading.indexOf(letter)
-      if (index > -1) this.lettersLoading.splice(index, 1)
-      this._lettersLoading$.next(this.lettersLoading)
+    console.log('SS downloadAll')
+    try {
+      return await this.databaseService.getFirebase('entries')
+    } catch (err) {
+      console.log('download all error', err)
+      throw err
     }
   }
+
+  notifyNoConnection() {
+
+  }
+
+
 
 }

@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
-import { IonicPage, NavController, NavParams } from 'ionic-angular';
+import { Component, ViewChild } from '@angular/core';
+import { IonicPage, NavController, NavParams, LoadingController, Content } from 'ionic-angular';
 import { EntryService } from "../../providers/entry-service"
+import { DatabaseService } from "../../providers/database-service"
 import { LanguageService } from "../../providers/language-service"
 import { trigger, state, style, animate, transition } from '@angular/animations';
 
@@ -28,49 +29,55 @@ export class Wordlist {
   language: any
   letter: string
 
-  entrySub: any
   langSub: any
+  entriesSub: any
 
   noEntries: boolean
   visibility: string = "hidden"
+
+  templateLang: string
+
+
+  @ViewChild(Content) content: Content;
+
 
   constructor(
     public navCtrl: NavController,
     public navParams: NavParams,
     public entryService: EntryService,
-    public languageService: LanguageService
+    public databaseService: DatabaseService,
+    public languageService: LanguageService,
+    public loadingCtrl: LoadingController,
     ) {
-  }
-
-  ngOnInit() {
-    
-    // Get the letter from nav params
     this.letter = this.navParams.data.letter
+    this.languageService.setLetter(this.navParams.data.letter)
 
-    this.entrySub = this.entryService.entries$.subscribe((entries) => {
-console.log("changed entries", entries)
-      this.entries = entries
-    })
-    
-    this.langSub = this.languageService.language$.subscribe( async (language) => {
-      this.visibility = "hidden"
+    this.langSub = this.languageService.language$.subscribe((language) => {
+      console.log("WL langSub")
+      this.visibility = 'hidden'
       this.language = language
-      this.letter = this.navParams.data.letter
+      this.getEntries()
+    })
 
-      if (this.letter) {
-        await this.entryService.getEntriesByLetter(this.letter)
-      }
-      
+    this.entriesSub = this.entryService.entries$.subscribe((entries) => {
+      this.entries = entries
+      console.log("WL entriesSub", entries)
       setTimeout(() => {
         this.visibility = "visible"  
-        this.noEntries = (this.entries.length===0) ? true : false
+        this.noEntries = (this.entries.length==0) ? true : false
       }, 120)
     })
 
   }
 
+  async getEntries() {
+    console.log("WL get entries", this.language.code, this.letter)
+    // trigger entry service to publish new set of entries
+    this.entryService.getEntriesForLetter(this.letter)
+  }
+
   ngOnDestroy() {
-    this.entrySub.unsubscribe()
+    this.entriesSub.unsubscribe()
     this.langSub.unsubscribe()
   }
 

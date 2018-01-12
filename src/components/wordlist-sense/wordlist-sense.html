@@ -1,0 +1,17 @@
+<div *ngIf='senses'>
+  
+  <!-- multiple senses -->
+  <div *ngIf='senses.length > 0'>
+    <span *ngFor="let sense of senses">
+      {{strip(sense.def)}}
+    </span>
+  </div>
+
+  <!-- single sense -->
+  <div *ngIf='(! senses.length) && (senses.def)'>
+    <span *ngIf="senses.def"> 
+      {{strip(senses.def)}}
+    </span>
+  </div>
+
+</div>

@@ -16,6 +16,7 @@ export class LanguageChooser {
   }
 
   setLanguage(language) {
+    console.log("pressed lang select")
     this.languageService.setLanguage(language)
   }
 
